@@ -842,7 +842,7 @@ function activeProfile() {
 function renderFriendStrip() {
   const strip = $('#friendStrip');
   // 설정 화면에서는 숨김
-  const visible = view !== 'settings' && view !== 'subject';
+  const visible = view !== 'settings' && view !== 'subject' && view !== 'join';
   strip.hidden = !visible;
   if (!visible) return;
   strip.innerHTML = state.profiles.map(p => {
