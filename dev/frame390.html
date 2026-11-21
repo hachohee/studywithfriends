@@ -14,7 +14,20 @@
 <script>
   var p = new URLSearchParams(location.search);
   var u = p.get('u');
-  if (u) document.getElementById('f').src = u;
+  var f = document.getElementById('f');
+  if (p.get('h')) f.style.height = p.get('h') + 'px';
+  if (u) f.src = u;
+  var to = p.get('to');
+  if (to) {
+    f.addEventListener('load', function () {
+      setTimeout(function () {
+        try {
+          var el = f.contentWindow.document.querySelector(to);
+          if (el) el.scrollIntoView({ block: p.get('block') || 'center' });
+        } catch (e) {}
+      }, 400);
+    });
+  }
 </script>
 </body>
 </html>
