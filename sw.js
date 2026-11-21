@@ -1,7 +1,7 @@
 /* 우리 반 공부방 · Service Worker
    - 앱 셸은 오프라인 캐시
    - 문서(HTML)는 네트워크 우선 → 새 버전이 바로 반영되고, 오프라인이면 캐시로 동작 */
-const CACHE = 'kids-study-app-v3';
+const CACHE = 'kids-study-app-v4';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', (event) => {
@@ -32,7 +32,7 @@ self.addEventListener('fetch', (event) => {
 
   if (isDoc) {
     event.respondWith(
-      fetch(req)
+      fetch(req, { cache: 'reload' })
         .then((res) => {
           const copy = res.clone();
           caches.open(CACHE).then((cache) => cache.put('./index.html', copy)).catch(() => {});
