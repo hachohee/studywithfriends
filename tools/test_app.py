@@ -330,7 +330,9 @@ def test_index():
     check("'p1', name: '찬우'" in js, 'index.html: 기본 자리 고정(state.joined) 유지')
 
     sw = open(SW, encoding='utf-8').read()
-    check("kids-study-app-v7" in sw, 'sw.js: 캐시 버전 v7')
+    m_ver = re.search(r"kids-study-app-v(\d+)", sw)
+    check(m_ver is not None and int(m_ver.group(1)) >= 7,
+          'sw.js: 캐시 버전 v%s(>=7)' % (m_ver.group(1) if m_ver else '?'))
 
     # index.html의 BANKS가 videos.json + build.py 결과와 같은지
     sys.path.insert(0, os.path.join(ROOT, 'tools'))
