@@ -2500,6 +2500,18 @@ async function init() {
   const loaded = await SyncAdapter.load();
   mergeLoaded(loaded);
 
+  // 찬우 기본 캐릭터를 🐍로 (예전에 쓰던 기기도 한 번만 바꿔요 — 그 뒤에 고른 값은 그대로 둠)
+  try {
+    if (!localStorage.getItem('kidsStudyApp.snake.v1')) {
+      const p1 = state.profiles[0];
+      if (p1 && p1.name === '찬우' && p1.emoji === '🦁') {
+        p1.emoji = '🐍';
+        try { await SyncAdapter.save(state); } catch (e2) {}
+      }
+      localStorage.setItem('kidsStudyApp.snake.v1', '1');
+    }
+  } catch (e) {}
+
   // PWA 연결은 http(s)에서만 (파일로 열 때 오류 없이 동작하도록)
   if (/^https?:$/.test(location.protocol)) {
     try {
