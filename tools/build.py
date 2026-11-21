@@ -28,7 +28,7 @@ def clean(v):
 
 
 def main():
-    data = json.load(open(VIDEOS))
+    data = json.load(open(VIDEOS, encoding='utf-8'))
     banks = {}
     for k in ORDER:
         items = data['subjects'].get(k, [])
@@ -37,7 +37,7 @@ def main():
         if bad:
             print('!! 10분 초과:', [v['id'] for v in bad], file=sys.stderr)
     body = 'const BANKS = ' + json.dumps(banks, ensure_ascii=False, indent=0).replace('\n', ' ') + ';'
-    html = open(HTML).read()
+    html = open(HTML, encoding='utf-8').read()
     new = re.sub(r'/\*__BANKS_START__\*/.*?/\*__BANKS_END__\*/',
                  '/*__BANKS_START__*/\n' + body + '\n/*__BANKS_END__*/', html, flags=re.S)
     if '/*__BANKS_START__*/' not in html or '/*__BANKS_END__*/' not in html:
@@ -45,7 +45,7 @@ def main():
         sys.exit(1)
     if new == html:
         print('(이미 최신)')
-    open(HTML, 'w').write(new)
+    open(HTML, 'w', encoding='utf-8', newline='').write(new)
     print('subject pools:', {k: len(v) for k, v in banks.items()}, 'total', sum(len(v) for v in banks.values()))
 
 
