@@ -492,6 +492,11 @@
    ========================================================================= */
 'use strict';
 
+/* QA: 콘솔 오류 수집(검증용) */
+window.__errs = [];
+window.addEventListener('error', function (e) { try { window.__errs.push(String((e && e.message) || e)); } catch (_) {} });
+window.addEventListener('unhandledrejection', function (e) { try { window.__errs.push('rejection: ' + String(e && e.reason)); } catch (_) {} });
+
 /* ─────────────────────────── 1. 학습 콘텐츠 ─────────────────────────── */
 
 const yt = (q) => 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q);
@@ -2177,6 +2182,17 @@ async function init() {
     SyncAdapter.load().then(l => { mergeLoaded(l); refreshCurrent(); });
   });
 }
+
+window.__kids = {
+  today: function (sid) {
+    const sub = SUBJECT_BY_ID[sid]; if (!sub) return null;
+    const it = dailyItem(sub); if (!it) return null;
+    return { q: it.q, ans: it.ans, vid: it.video.title, ch: it.video.ch, dur: it.video.dur_label, url: it.video.url, summary: it.video.summary };
+  },
+  day: function () { return { dayNumber: dayNumber(), key: todayKey(), label: dateLabel(), idx: SUBJECTS.map(function (s) { return s.id + ':' + dailyIndex(s); }) }; },
+  invite: function (slot) { return inviteMessage(slot); },
+  state: function () { return { activeId: state.activeId, profiles: state.profiles, errs: window.__errs }; }
+};
 
 init();
 </script>
