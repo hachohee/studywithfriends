@@ -425,6 +425,52 @@
      "why": "영상 1분 23초에 \"먼저 이름을 말하고 그 다음에 성을 뒤에 말해요\"라고 나와요. 우리말과 반대예요.",
      "key": "영어는 이름(first name) 먼저, 성(last name) 나중!"
     }
+   },
+   {
+    "id": "CGGuziz9tww-q2",
+    "url": "https://www.youtube.com/watch?v=CGGuziz9tww",
+    "title": "EBS초등영어 초목달 : 영어로 자기소개하기",
+    "channel": "EBSlang (EBS 초등영어 초목달)",
+    "dur_s": 436,
+    "dur_label": "7:15",
+    "caption": "ko(자동생성)",
+    "verified_on": "2026-11-21",
+    "summary": "같은 영상 후반부: 성을 last name(또는 surname)이라 하고, Mr·Ms는 성 앞에 붙인다.",
+    "evidence": "자막 1:42 \"성이라는 것은 영어로 last name\"; 2:12 \"성이 앞에 오면 surname\"; 4:10 \"Mr·Ms는 성 앞에 붙여요\"",
+    "quiz": {
+     "q": "영상에서 영어로 '성'을 무엇이라고 했나요?",
+     "opts": [
+      "last name",
+      "first name",
+      "phone name"
+     ],
+     "ans": 0,
+     "why": "영상 1분 42초에 \"성이라는 것은 영어로 last name\"이라고 나와요. 이름은 first name이에요.",
+     "key": "이름은 first name, 성은 last name!"
+    }
+   },
+   {
+    "id": "CGGuziz9tww-q3",
+    "url": "https://www.youtube.com/watch?v=CGGuziz9tww",
+    "title": "EBS초등영어 초목달 : 영어로 자기소개하기",
+    "channel": "EBSlang (EBS 초등영어 초목달)",
+    "dur_s": 436,
+    "dur_label": "7:15",
+    "caption": "ko(자동생성)",
+    "verified_on": "2026-11-21",
+    "summary": "같은 영상 후반부: Mr는 남자, Ms는 여자에게 성 앞에 붙여 부른다.",
+    "evidence": "자막 4:10 \"Mr·Ms는 성 앞에 붙여요\"",
+    "quiz": {
+     "q": "영상에서 Mr·Ms 같은 말은 어디에 붙여서 말한다고 했나요?",
+     "opts": [
+      "성 앞에",
+      "이름 앞에",
+      "맨 뒤에"
+     ],
+     "ans": 0,
+     "why": "영상 4분 10초에 \"Mr·Ms는 성 앞에 붙여요\"라고 나와요. Mr는 남자, Ms는 여자에게 붙여요.",
+     "key": "Mr·Ms는 성 앞에 붙여요."
+    }
    }
   ]
  }
