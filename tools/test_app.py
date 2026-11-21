@@ -158,18 +158,19 @@ def test_videos(data):
             else:
                 by_video[vid] = essay
             # 같은 글을 쓰는 문제는 모두 그 글에서 답을 찾을 수 있어야 함
-    # 한국사 하루 2문제가 같은 글인지(=글 하나로 둘 다 풀 수 있는지)
-    hist = data['subjects']['history']
-    groups = {}
-    for it in hist:
-        groups.setdefault(it['id'].split('-q')[0], []).append(it)
-    for vid, g in groups.items():
-        check(len(g) >= 2, 'videos.json[history/%s]: 문제 %d개(하루 2문제)' % (vid, len(g)))
-        for it in g:
-            answer = it['quiz']['opts'][it['quiz']['ans']]
-            needle = ANSWER_NEEDLE.get(it['id']) or answer
-            check(norm(needle) in norm(g[0].get('essay', '')),
-                  'videos.json[history/%s]: 하루 2문제 모두 같은 글에서 답 확인' % it['id'])
+    # 같은 글을 쓰는 문제는 모두 그 글에서 답을 찾을 수 있어야 함
+    # 한국사 2문제 · 위인 3문제: 하루에 내는 문제가 모두 같은 글 안에서 풀려야 한다
+    for subj, per in (('history', 2), ('hero', 3)):
+        groups = {}
+        for it in data['subjects'][subj]:
+            groups.setdefault(it['id'].split('-q')[0], []).append(it)
+        for vid, g in groups.items():
+            check(len(g) >= per, 'videos.json[%s/%s]: 문제 %d개(하루 %d문제)' % (subj, vid, len(g), per))
+            for it in g:
+                answer = it['quiz']['opts'][it['quiz']['ans']]
+                needle = ANSWER_NEEDLE.get(it['id']) or answer
+                check(norm(needle) in norm(g[0].get('essay', '')),
+                      'videos.json[%s/%s]: 하루 문제 모두 같은 글에서 답 확인' % (subj, it['id']))
     return totals
 
 
@@ -182,11 +183,37 @@ def js_day_number(day='2026-11-21'):
 HISTORY_START = '2026-11-21'
 
 
-def test_rotation(data):
+def parse_cfg(js):
+    """index.html 의 하루 분량 상수를 읽어 온다."""
+    daily = int(re.search(r'const DAILY_SENTENCES = (\d+);', js).group(1))
+    per_src = re.search(r'const PER_DAY = \{([^}]*)\}', js).group(1)
+    per = {k: int(v) for k, v in re.findall(r'(\w+)\s*:\s*(\d+)', per_src)}
+    plan_src = re.search(r'const MATH_PLAN = \[(.*?)\];', js, re.S).group(1)
+    math_total = sum(int(n) for n in re.findall(r"\[\s*'[^']+',\s*(\d+)\]", plan_src))
+    rot = {'math': 0, 'english': 2, 'history': 4, 'hero': 6, 'news': 8}   # SUBJECTS.forEach: rot = i*2
+    block = re.search(r'const ENGLISH_STEPS = \[(.*?)\n\];', js, re.S).group(1)
+    pair = re.findall(r"\{\s*en:\s*('(?:[^'\\]|\\.)*'|\"(?:[^\"\\]|\\.)*\"),\s*ko:\s*('(?:[^'\\]|\\.)*'|\"(?:[^\"\\]|\\.)*\")", block)
+    ens = [eval(a) for a, _ in pair]
+    kos = [eval(b) for _, b in pair]
+    return {'per_day': per, 'daily_sentences': daily, 'math_total': math_total,
+            'rot': rot, 'english_sentences': len(pair), 'ens': ens, 'kos': kos}
+
+
+def test_english(cfg):
+    ens, kos, per = cfg['ens'], cfg['kos'], cfg['daily_sentences']
+    check(len(ens) >= 30, 'ENGLISH_STEPS: 문장 %d개(>=30, 하루 %d문장이면 %d일 주기)' % (len(ens), per, len(ens) // per))
+    check(len(set(ens)) == len(ens), 'ENGLISH_STEPS: 영어 문장 중복 없음')
+    check(len(set(kos)) == len(kos), 'ENGLISH_STEPS: 우리말 뜻 중복 없음(퀴즈 보기 3개가 서로 다름)')
+    check(all(tip for tip in re.findall(r"tip:\s*'([^']*)'", re.search(r'const ENGLISH_STEPS = \[(.*?)\n\];', open(INDEX, encoding='utf-8').read(), re.S).group(1))),
+          'ENGLISH_STEPS: 모든 문장에 발음 팁(tip)')
+    check(per == 3 and len(ens) % per == 0, 'ENGLISH: 하루 %d문장 × %d일 = %d문장' % (per, len(ens) // per, len(ens)))
+
+
+def test_rotation(data, cfg):
     hist = data['subjects']['history']
     hero = data['subjects']['hero']
     news = data['subjects']['news']
-    per_day = 2
+    per_day = cfg['per_day']['history']
 
     def groups_of(bank):
         g, order = {}, []
@@ -198,6 +225,7 @@ def test_rotation(data):
             g[v].append(i)
         return [g[v] for v in order]
 
+    check(per_day == 2, 'PER_DAY.history = %d (하루 2문제)' % per_day)
     hg = groups_of(hist)
     check(all(len(g) >= per_day for g in hg), 'dailyIdxs: 한국사 주제마다 문제 %d개 이상' % per_day)
 
@@ -221,17 +249,31 @@ def test_rotation(data):
     second_round = [g[(1 + k) % len(g)] for k in range(per_day)]
     check(first_round != second_round, 'dailyIdxs: 같은 주제 두 번째 바퀴는 다른 문제 2개')
 
-    # 위인·시사: 하루 1문제, 은행 크기만큼 돌면 전부 한 번씩
-    for name, bank, rot in (('hero', hero, 1 * 2), ('news', news, 4 * 2)):
-        idxs = [(js_day_number() + rot) % len(bank) for _ in range(1)]
-        check(all(0 <= i < len(bank) for i in idxs), 'dailyIdxs: %s 문제 번호 범위' % name)
-        cycle = [((js_day_number() + d) + rot) % len(bank) for d in range(len(bank))]
-        check(sorted(cycle) == list(range(len(bank))), 'dailyIdxs: %s는 %d일 동안 모든 문제를 한 번씩' % (name, len(bank)))
+    # 위인: 하루 1명(한 주제)에서 3문제 — 하루 문제는 그 인물의 문제 3개 전부
+    per_hero = cfg['per_day']['hero']
+    check(per_hero == 3, 'PER_DAY.hero = %d (위인 하루 3문제)' % per_hero)
+    hg2 = groups_of(hero)
+    check(all(len(g) >= per_hero for g in hg2), 'dailyIdxs: 위인 인물마다 문제 %d개 이상' % per_hero)
+    hero_topics = []
+    for day in range(0, 2 * len(hg2)):
+        g2 = hg2[(day + cfg['rot']['hero']) % len(hg2)]
+        idxs = g2[:per_hero]
+        if not check(len(idxs) == per_hero and len(set(idxs)) == per_hero, 'dailyIdxs: %d일차 위인 문제 3개(중복 없음)' % day):
+            break
+        if not check(all(0 <= i < len(hero) for i in idxs), 'dailyIdxs: %d일차 위인 문제 번호 범위' % day):
+            break
+        hero_topics.append((day + cfg['rot']['hero']) % len(hg2))
+    check(sorted(set(hero_topics)) == list(range(len(hg2))), 'dailyIdxs: 위인은 인물을 하루씩 번갈아 (%s)' % hero_topics)
+
+    # 시사상식: 하루 1문제, 은행 크기만큼 돌면 전부 한 번씩
+    rot = cfg['rot']['news']
+    cycle = [((js_day_number() + d) + rot) % len(news) for d in range(len(news))]
+    check(sorted(cycle) == list(range(len(news))), 'dailyIdxs: 시사상식은 %d일 동안 모든 문제를 한 번씩' % len(news))
 
     # 수학: 하루 5+2+3, 종류별 순환
     plan = [('연산', 5), ('사고력', 2), ('서술형', 3)]
     total = sum(n for _, n in plan)
-    check(total == 10, 'MATH_PLAN: 하루 %d문제' % total)
+    check(total == cfg['math_total'] == 10, 'MATH_PLAN: 하루 %d문제' % total)
     bank_len = {'연산': 140, '사고력': 45, '서술형': 45}
     for day in range(0, 28):
         for kind, n in plan:
@@ -240,9 +282,18 @@ def test_rotation(data):
             if not check(len(set(sel)) == n, 'mathDaily: %d일차 %s %d문제 중복 없음' % (day, kind, n)):
                 break
 
-    # 영어: 하루 1문장, 15문장 전체를 도는지
-    sent_cycle = [((d * 1 + 0) * 7 + 3) % 15 for d in range(0, 15)]
-    check(len(set(sent_cycle)) == 15, 'dailySentIdxs: 15일 동안 영어 문장 15개를 한 번씩')
+    # 영어: 하루 3문장 — 날마다 3개가 서로 다르고, 10일이면 30문장을 한 번씩
+    per_en, n_sent = cfg['daily_sentences'], cfg['english_sentences']
+    check(per_en == 3, 'DAILY_SENTENCES = %d (영어 하루 3문장)' % per_en)
+    check(n_sent >= 30, 'ENGLISH_STEPS: 문장 %d개(>=30)' % n_sent)
+    used = []
+    for d in range(0, n_sent // per_en):
+        idxs = [((d * per_en + j) * 7 + 3) % n_sent for j in range(per_en)]
+        if not check(len(set(idxs)) == per_en, 'dailySentIdxs: %d일차 영어 문장 3개(중복 없음)' % d):
+            break
+        used += idxs
+    check(len(used) == n_sent and sorted(used) == list(range(n_sent)),
+          'dailySentIdxs: %d일 동안 영어 문장 %d개를 겹치지 않고 한 번씩' % (n_sent // per_en, n_sent))
 
 
 # ─────────────────────────── 4. index.html 구조 ───────────────────────────
@@ -266,7 +317,12 @@ def test_index():
     m = re.search(r'function awardSpeak\(sid, si\)\s*\{(.*?)\n\}', js, re.S)
     check(m and 'pushStampFor' not in m.group(1), 'index.html: 따라 말하기만으로 완료 도장을 올리지 않음')
     check('solved >= idxs.length' in js, 'index.html: 완료 = 오늘 문제 전부 맞힘')
-    check(re.search(r"PER_DAY\s*=\s*\{\s*history:\s*2\s*\}", js) is not None, 'index.html: PER_DAY.history = 2')
+    check(re.search(r"PER_DAY\s*=\s*\{\s*history:\s*2\b", js) is not None, 'index.html: PER_DAY.history = 2')
+    check(re.search(r"PER_DAY\s*=\s*\{.*?hero:\s*3", js) is not None, 'index.html: PER_DAY.hero = 3')
+    check(re.search(r"const DAILY_SENTENCES = 3;", js) is not None, 'index.html: DAILY_SENTENCES = 3')
+    check("'읽기 + ' + prog.total + '문제'" in js, 'index.html: 홈 카드에 오늘 문제 수(읽기 + N문제)')
+    check("'문장 ' + ix.length + ' + 퀴즈 ' + ix.length" in js, 'index.html: 홈 카드에 영어 문장·퀴즈 수')
+    check("prog.solved + '/' + prog.total" in js, 'index.html: 홈 카드에 진행률(x/y 진행 중)')
     check(re.search(r"HISTORY_START\s*=\s*'%s'" % HISTORY_START, js) is not None, 'index.html: 한국사 시작일 %s' % HISTORY_START)
     check(re.search(r"SB_URL = 'https://[a-z0-9]+\.supabase\.co'", js) is not None and 'kids_study_stamps' in js,
           'index.html: Supabase 연동(kids_study_profiles/stamps) 유지')
@@ -306,9 +362,12 @@ def test_downloads_copy(html):
 
 def main():
     data = json.load(open(VIDEOS, encoding='utf-8'))
+    js = re.search(r'<script>(.*)</script>', open(INDEX, encoding='utf-8').read(), re.S).group(1)
+    cfg = parse_cfg(js)
     test_math()
     totals = test_videos(data)
-    test_rotation(data)
+    test_english(cfg)
+    test_rotation(data, cfg)
     html = test_index()
     test_downloads_copy(html)
     print('\n'.join('✅ ' + m for m in PASS))
