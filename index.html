@@ -961,11 +961,15 @@ function refreshFromSync() {
 }
 async function ensureTables() {
   if (tablesReady) return true;
-  if (Date.now() - specCheckedAt < 30000) return false;
+  if (Date.now() - specCheckedAt < 30000) return false;   // 30초에 한 번만 확인
   specCheckedAt = Date.now();
-  const spec = await sbReq('/rest/v1/');
-  const defs = (spec && spec.definitions) || {};
-  tablesReady = !!(defs.kids_study_profiles && defs.kids_study_stamps);
+  try {
+    await sbReq('/rest/v1/kids_study_profiles?select=slot&limit=1');
+    tablesReady = true;
+  } catch (e) {
+    if (e && e.status === 404) return false;               // 아직 테이블 없음 → 조용히 대기
+    throw e;
+  }
   return tablesReady;
 }
 async function syncPull(reason) {
