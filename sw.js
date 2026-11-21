@@ -1,5 +1,5 @@
 /* 우리 반 공부방 · Service Worker (앱 셸 오프라인 캐시) */
-const CACHE = 'kids-study-app-v1';
+const CACHE = 'kids-study-app-v2';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', (event) => {

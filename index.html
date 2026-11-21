@@ -342,6 +342,60 @@
   .prow input:focus{border-color:#FFB08A;background:#fff}
   .about{font-size:11.5px;color:#9A9184;font-weight:600;line-height:1.6;text-align:center;padding:16px 4px 4px}
 
+  /* ── 오늘의 학습 · 영상 카드 ── */
+  .daily{
+    display:block;width:100%;text-align:left;background:#fff;border-radius:20px;padding:14px;
+    box-shadow:var(--shadow-sm);border:1.5px solid #F6EEE5;
+  }
+  .daily:active{transform:scale(.99)}
+  .daily.done{border-color:#BFE9D6;background:linear-gradient(180deg,#F7FDFA,#fff)}
+  .daily .d-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .daily .d-ico{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:18px;background:var(--soft);flex:0 0 auto}
+  .daily .d-name{font-size:14.5px;font-weight:900;letter-spacing:-.02em;flex:1;min-width:0}
+  .daily .d-badge{font-size:10.5px;font-weight:900;padding:4px 8px;border-radius:99px;background:#FFF1E6;color:#B4631B;flex:0 0 auto}
+  .daily.done .d-badge{background:var(--ok-soft);color:#0F6B4C}
+  .daily .d-q{font-size:13.5px;font-weight:800;line-height:1.45;letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .daily .d-vid{display:block;font-size:11px;font-weight:700;color:#8A8199;margin-top:8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .vidcard{
+    display:flex;align-items:center;gap:11px;background:#fff;border-radius:18px;padding:12px;
+    box-shadow:var(--shadow-sm);border:1.5px solid #F6EEE5;text-decoration:none;color:var(--ink);margin-top:4px;
+  }
+  .vidcard.unlock{border-color:#BFE9D6;box-shadow:0 0 0 3px rgba(31,169,122,.12),var(--shadow-sm)}
+  .vidcard .v-thumb{width:54px;height:42px;border-radius:11px;background:linear-gradient(135deg,#FFD9C7,#FFB08A);display:grid;place-items:center;font-size:18px;flex:0 0 auto}
+  .vidcard .v-body{display:block;flex:1;min-width:0}
+  .vidcard .v-t{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12.5px;font-weight:800;line-height:1.35}
+  .vidcard .v-d{display:block;font-size:10.5px;color:#9A9184;font-weight:700;margin-top:3px}
+  .vidcard .v-go{color:#C9BFB2;font-size:13px;flex:0 0 auto}
+  .invite-card{margin-top:16px;border-radius:20px;padding:14px;background:linear-gradient(135deg,#EAF5FF,#F6EEFF);border:1.5px dashed #BBD4F5}
+  .ic-top{display:flex;align-items:center;gap:10px}
+  .ic-top .ic-emoji{font-size:24px;line-height:1}
+  .ic-top b{display:block;font-size:14px;letter-spacing:-.02em}
+  .ic-top small{font-size:11px;color:#6E7C96;font-weight:700}
+  /* ── 친구 참여(join) ── */
+  .join-wrap{padding:18px 16px 40px;text-align:center}
+  .join-hero{font-size:54px;line-height:1.1}
+  .join-wrap h1{font-size:20px;margin:12px 0 6px;letter-spacing:-.03em;line-height:1.35}
+  .join-sub{font-size:12.5px;color:#6E6884;font-weight:700;line-height:1.55;margin:0 0 16px}
+  .join-field{text-align:left;background:#fff;border-radius:20px;padding:14px;box-shadow:var(--shadow-sm);border:1px solid #F6EEE5;margin-bottom:12px}
+  .join-field label{display:block;font-size:12px;font-weight:900;color:#8A8199;margin-bottom:7px}
+  .join-field input{width:100%;padding:14px;border-radius:14px;border:2px solid #F0E6DA;background:#FDFAF6;font-size:17px;font-weight:800;outline:none}
+  .join-field input:focus{border-color:#FFB08A;background:#fff}
+  .emoji-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:2px}
+  .emoji-grid button{padding:11px 0;border-radius:14px;font-size:24px;background:#FBF7F1;border:2px solid transparent;line-height:1.1}
+  .emoji-grid button.on{border-color:#FF7A45;background:#FFF1E8}
+  .emoji-grid button.taken{opacity:.32}
+  .join-err{min-height:18px;font-size:12px;font-weight:800;color:#C2334F;margin-top:8px;text-align:left;line-height:1.4}
+  .slot-row{display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid #EEF2F8}
+  .slot-row:first-of-type{border-top:0}
+  .slot-row .sr-ava{font-size:20px;width:28px;text-align:center;flex:0 0 auto}
+  .slot-row .sr-name{flex:1;min-width:0;font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .slot-row .sr-tag{font-size:10px;font-weight:800;color:#7C8AA5;background:#EEF3FB;padding:3px 7px;border-radius:99px;flex:0 0 auto}
+  .slot-row button{padding:8px 11px;border-radius:11px;font-size:11.5px;font-weight:900;background:#2A4694;color:#fff;flex:0 0 auto}
+  .welcome{margin-top:12px;border-radius:18px;padding:13px 14px;background:#FFF4EC;border:1.5px solid #FFD9C7;display:flex;align-items:center;gap:10px}
+  .welcome span{font-size:20px}
+  .welcome div{flex:1;font-size:12.5px;font-weight:800;line-height:1.45;color:#8A3E14}
+  .welcome button{font-size:11px;font-weight:900;color:#B4631B;padding:6px 8px}
+
   /* ── tab bar ── */
   .tabbar{
     position:fixed;left:0;right:0;bottom:0;z-index:40;
@@ -411,6 +465,7 @@
     <section class="view" data-view="subject" id="view-subject" hidden></section>
     <section class="view" data-view="board" id="view-board" hidden></section>
     <section class="view" data-view="settings" id="view-settings" hidden></section>
+    <section class="view" data-view="join" id="view-join" hidden></section>
   </main>
 
   <nav class="tabbar" aria-label="메뉴">
@@ -590,6 +645,34 @@ const ALL_SENTENCES = ENGLISH_STEPS.flatMap((st, si) =>
 );
 ALL_SENTENCES.forEach((s, i) => { s.idx = i; });
 
+/* ── 1-b. 오늘의 영상+퀴즈 데이터 (videos.json 에서 생성 · 자막 확인된 영상만) ──
+   각 항목: { id, url, title, ch, dur, dur_label, summary, evidence, q, opts, ans, why, key }
+   퀴즈는 그 영상의 자막에서 확인한 내용만 넣었다. */
+/*__BANKS_START__*/
+const BANKS = { "math": [ { "id": "afCLjaTFL94", "url": "https://www.youtube.com/watch?v=afCLjaTFL94", "title": "5화｜십 모형 2개씩 3묶음 = 20 곱하기 3｜수학응원단", "ch": "EBSMath", "dur": 371, "dur_label": "6:11", "summary": "20개씩 3묶음을 더하기·뛰어세기·수모형·곱셈식 네 가지 방법으로 구해 20×3=60임을 보여주고, 32×2도 같은 방법으로 계산한다.", "evidence": "자막 0:22 \"20개씩 세 모음이니까\"; 0:34 \"20+20은 40, 40에 20을 한 번 더 더하면 60\"; 1:48 \"20 * 3은 60\"; 2:04 \"마카롱 20개씩 세 상자는 모두 60개야\"; 4:29 \"초콜릿 32개씩 두 상자면 모두 64개야\"", "key": "20개씩 3묶음은 20×3=60. 묶음수만큼 더하거나 뛰어세면 돼요.", "q": "영상에서 마카롱 20개씩 든 상자 3개에는 모두 몇 개가 들어 있었나요?", "opts": [ "60개", "40개", "80개" ], "ans": 0, "why": "영상 2분 4초에 \"마카롱 20개씩 세 상자는 모두 60개야\"라고 나와요. 20+20+20=60, 20×3=60이에요." }, { "id": "QP94mql9qKo", "url": "https://www.youtube.com/watch?v=QP94mql9qKo", "title": "7화｜123씩 2묶음=123 곱하기 2｜수학응원단", "ch": "EBSMath", "dur": 454, "dur_label": "7:34", "summary": "기차 좌석 수로 세 자리 수 곱셈을 설명하며 123×2=246, 125×3=375와 올림(받아올림)을 가르친다.", "evidence": "자막 1:02 \"수모형을 모두 모으면 246개\"; 1:08 \"기차 두 량에는 모두 246명이 탈 수 있어\"; 4:12 \"1의 자리 수 5에 곱하는 수 3을 곱하면 15야\"; 4:22 \"이걸 올림이라고 해\"; 5:48 \"한 량에 125개씩 세 량이면 좌석은 모두 375개\"", "key": "123×2=246처럼 세 자리 수 곱셈은 자리를 맞춰 차례로 곱해요.", "q": "영상에서 좌석이 123개인 기차 2량에는 모두 몇 명이 탈 수 있다고 했나요?", "opts": [ "246명", "375명", "123명" ], "ans": 0, "why": "영상 1분 8초에 \"기차 두 량에는 모두 246명이 탈 수 있어\"라고 나와요. 123×2=246이에요." }, { "id": "UWXq5HNM2_8", "url": "https://www.youtube.com/watch?v=UWXq5HNM2_8", "title": "8화｜10에서 2를 5번 덜어내면 몫은 5｜수학응원단", "ch": "EBSMath", "dur": 466, "dur_label": "7:46", "summary": "사탕·과자를 접시에 똑같이 나누고 같은 수씩 덜어내는 활동으로 나눗셈식과 '몫'의 뜻을 가르친다.", "evidence": "자막 1:31 \"8 나 2의 몫은 4야\"; 1:47 \"나누어지는 수를 나누는 수로 나누면 몫이 나오지\"; 4:58 \"초콜릿 열 개를 두 개씩 덜어내면 다섯 번. 10 나 2의 몫은 5야\"; 5:55 \"12가 되는 3단의 짝꿍수가 4니까 몫이 4야\"", "key": "똑같이 나누고 덜어낸 횟수가 바로 '몫'이에요.", "q": "영상에서 사탕 8개를 접시 2개에 똑같이 나누면 접시 한 개에 몇 개씩 담기나요?", "opts": [ "4개", "2개", "8개" ], "ans": 0, "why": "영상 1분 31초에 \"8 나누기 2의 몫은 4\"라고 나와요. 접시 한 개에 사탕이 4개씩 담겨요." }, { "id": "mg9u8whrxb4", "url": "https://www.youtube.com/watch?v=mg9u8whrxb4", "title": "시간｜초등수학사전", "ch": "EBSMath", "dur": 187, "dur_label": "3:06", "summary": "'시간'과 '시각'을 영화 보는 상황과 한자 뜻풀이로 구분해 주는 3분짜리 용어 영상이다.", "evidence": "자막 0:46 \"시각은 시계에서 긴 바늘과 짧은 바늘이 가리키는 순간이에요\"; 1:02 \"시간은 시각과 시각 사이의 동안이고요\"; 2:28 \"3시 10분에서 40분 후는 3시 50분입니다\"; 2:49 \"시간: 시각과 시각 사이의 동안 또는 기간\"", "key": "'시각'은 한 순간, '시간'은 그 사이의 동안이에요.", "q": "영상에서 '시간'은 무엇이라고 했나요?", "opts": [ "시각과 시각 사이의 동안", "시계가 가리키는 한 순간", "하루에 잠자는 동안" ], "ans": 0, "why": "영상 2분 49초에 \"시간: 시각과 시각 사이의 동안 또는 기간\"이라고 정리해요. 시계가 가리키는 한 순간은 '시각'이에요." } ], "english": [ { "id": "CGGuziz9tww", "url": "https://www.youtube.com/watch?v=CGGuziz9tww", "title": "EBS초등영어 초목달 : 영어로 자기소개하기", "ch": "EBSlang (EBS 초등영어 초목달)", "dur": 436, "dur_label": "7:15", "summary": "영어로 이름을 소개하는 법을 가르친다. 영어는 이름(first name)을 먼저, 성(last name)을 나중에 말한다.", "evidence": "자막 1:23 \"영어로 표현할 때는 먼저 이름을 먼저 말하고 그 다음에 성을 뒤에 말해요\"; 1:42 \"성이라는 것은 영어로 last name\"; 2:12 \"성이 앞에 오면 surname\"; 4:10 \"Mr·Ms는 성 앞에 붙여요\"", "key": "영어는 이름(first name) 먼저, 성(last name) 나중!", "q": "영상에서 영어로 이름을 말할 때 순서는 어떻게 한다고 했나요?", "opts": [ "이름 먼저, 성 나중", "성 먼저, 이름 나중", "아무 순서나 괜찮아요" ], "ans": 0, "why": "영상 1분 23초에 \"먼저 이름을 말하고 그 다음에 성을 뒤에 말해요\"라고 나와요. 우리말과 반대예요." } ], "history": [ { "id": "dajNcGW2w7s", "url": "https://www.youtube.com/watch?v=dajNcGW2w7s", "title": "단군 할아버지는 특별해! 단군왕검 신화로 본 고조선의 건국 이야기 | 한국사 고조선 ★ 지니스쿨 역사", "ch": "지니스쿨 역사 GeniSchool History", "dur": 523, "dur_label": "8:43", "summary": "고조선 건국 신화(환인·환웅·웅녀)를 애니메이션으로 풀고, 단군왕검이 '한 사람 이름'이 아니라 우두머리를 뜻하는 호칭임을 알려준다.", "evidence": "자막 4:31 \"수과 마늘만 먹어라 백일 버틴 곳만 인간 되었다\"; 5:28 \"비 구름 바람은 농사에 커다란 영향을 미치는 자연현상… 고조선은 농본주의\"; 7:36 \"당군 왕검은 한 사람의 이름이 아니라… 우두머리를 뜻하는 호칭이었다\"", "key": "쑥과 마늘을 먹고 100일을 버틴 곰이 웅녀가 되었어요.", "q": "영상에서 곰과 호랑이는 사람이 되려고 동굴에서 무엇만 먹으며 100일을 버텼다고 했을까요?", "opts": [ "쑥과 마늘", "밥과 김치", "사과와 우유" ], "ans": 0, "why": "영상 4분 31초에 \"쑥과 마늘만 먹어라, 백일 버티면 인간이 된다\"고 나와요. 곰(웅녀)은 버텨서 사람이 되었어요." }, { "id": "SYFsJKLiQdg", "url": "https://www.youtube.com/watch?v=SYFsJKLiQdg", "title": "알에서 태어난 왕들! 신라 가야 건국신화 | 어린이 삼국유사 삼국사기 | 초등 이야기 한국사 삼국시대 ★ 지니스쿨 역사", "ch": "지니스쿨 역사 GeniSchool History", "dur": 402, "dur_label": "6:42", "summary": "알에서 태어난 박혁거세(신라)와 김수로왕(가야)의 탄생 이야기를 통해 삼국시대에 가야도 있었다는 것을 알려준다.", "evidence": "자막 1:54 \"바코가 13살이 되 해 사람들이 왕과 왕비로 모셨지\"; 3:17 \"김수로왕 나머지 아이들도 다섯 가야의 왕이 됐지\"; 4:05 \"김수로왕과 허황옥이 바로 김해 김씨와 김해 허씨\"", "key": "알에서 태어난 박혁거세는 13살에 신라의 왕이 되었어요.", "q": "영상에서 알에서 태어난 박혁거세는 몇 살에 왕이 되었나요?", "opts": [ "13살", "3살", "20살" ], "ans": 0, "why": "영상 1분 54초에 \"박혁거세가 13살이 되자 사람들이 왕으로 모셨다\"고 나와요. 알에서 태어나 13살에 왕이 된 특별한 이야기예요." }, { "id": "yqNbmtBr4c8", "url": "https://www.youtube.com/watch?v=yqNbmtBr4c8", "title": "활쏘기 대장 주몽! 고구려 건국신화 | 어린이 삼국유사 삼국사기 | 초등 이야기 한국사 삼국시대 ★ 지니스쿨 역사", "ch": "지니스쿨 역사 GeniSchool History", "dur": 423, "dur_label": "7:03", "summary": "활을 잘 쏘는 주몽이 알에서 태어나 부여를 떠나 고구려를 세우는 건국신화를 애니메이션으로 보여준다.", "evidence": "자막 4:27 \"아빠는 하늘의 신 해모수 엄마는 물의 신 하백의 딸 유화\"; 5:0x \"부여의 왕자들이 주몽을 시기해…\"; 6:xx \"고구려는 고조선이 망한 뒤에 세워진 나라\"", "key": "하늘의 신 해모수와 물의 신의 딸 유화 사이에서 알로 태어난 주몽이 고구려를 세웠어요.", "q": "영상에서 주몽의 아버지는 누구라고 했나요?", "opts": [ "하늘의 신 해모수", "물의 신 하백", "부여의 왕 금와" ], "ans": 0, "why": "영상 4분 27초에 \"주몽의 아빠는 하늘의 신 해모수, 엄마는 물의 신 하백의 딸 유화\"라고 나와요." }, { "id": "Tzu5xJZ3fso", "url": "https://www.youtube.com/watch?v=Tzu5xJZ3fso", "title": "왜구를 물리쳐라! 이순신과 거북선 | 한국사 조선시대 애니메이션 ★ 지니스쿨 역사", "ch": "지니스쿨 역사 GeniSchool History", "dur": 519, "dur_label": "8:38", "summary": "이순신이 거북 모양 배를 떠올린 까닭과 거북선을 만드는 과정, 첫 출전과 승리를 이야기로 보여준다.", "evidence": "자막 1:55 \"물에 젖어도 휘어지지 않고 잘 갈라지지 않는 나무는 세 가지(상수리나무·소나무·졸참나무)\"; 4:45 \"앞으로 이 배를 거북선이라 부르겠노라\"; 6:16 \"1592년 5월 29일 오늘 처음으로 거북선이 전쟁에 나갔다\"", "key": "거북선은 1592년 5월 29일 왜구와의 첫 싸움에 나갔어요.", "q": "영상에서 거북선이 처음으로 전쟁에 나간 날은 언제라고 했나요?", "opts": [ "1592년 5월 29일", "1446년 10월 9일", "1919년 3월 1일" ], "ans": 0, "why": "영상 6분 16초에 \"1592년 5월 29일 오늘 처음으로 거북선이 전쟁에 나갔다\"고 나와요." } ], "hero": [ { "id": "1Z19a8JmFEM", "url": "https://www.youtube.com/watch?v=1Z19a8JmFEM", "title": "조선 최고의 과학자 장영실 | 어린이 조선왕조실록 | 초등 이야기 한국사 조선시대 ★ 지니스쿨 역사", "ch": "지니스쿨 역사 GeniSchool History", "dur": 302, "dur_label": "5:01", "summary": "평민 출신 장영실이 세종의 명을 받아 해시계·물시계·혼천의·풍기대·수표를 만들어 백성의 생활을 도운 이야기.", "evidence": "자막 1:57 \"평민 출신이지만 만드는 솜씨가 아주 뛰어나\"; 3:26 \"앙부일구, 바늘의 그림자가 가리키는 곳을 보면 시간을 알 수 있습니다\"; 3:35 \"해가 뜨지 않는 날이나 밤에는 사용할 수 없지 않나. 그래서 해 없이도 시간을 알 수 있는 물시계 자격루를 만들었습니다\"; 3:43 \"혼천의·풍기대·수표까지 모두 만들었습니다\"", "key": "장영실은 해시계(낮)와 물시계(밤)를 모두 만들어 시간을 알게 했어요.", "q": "영상에서 해가 없을 때도 시간을 알 수 있게 만든 것은 무엇인가요?", "opts": [ "물시계 자격루", "해시계 앙부일구", "측우기" ], "ans": 0, "why": "영상 3분 35초에 \"해 없이도 시간을 알 수 있는 물시계 자격루를 만들었습니다\"라고 나와요. 해시계 앙부일구는 밤이나 흐린 날에는 쓸 수 없었어요." }, { "id": "EqoFG-yBZHU", "url": "https://www.youtube.com/watch?v=EqoFG-yBZHU", "title": "이순신 장군 동상의 비밀 l 동상 하나에도 역사 비밀이!? 📚| 어린이 한국사 ★ 지니스쿨", "ch": "지니스쿨 역사 GeniSchool History", "dur": 127, "dur_label": "2:07", "summary": "광화문 이순신 동상의 갑옷이 중국식이라 역사 고증 논란이 있으며, 실제 조선 갑옷 '두정갑'이 해전에 더 맞는다는 이야기.", "evidence": "자막 0:21 \"광화문 이순신 장군 동상이 착용한 갑옷은 중국식 전통 갑주 요소\"; 1:03 \"조선 시대 대표 갑옷 두정갑\"; 1:12 \"철로 만든 작은 미늘들이 두정으로 고정되며 1500개 이상\"; 1:45 \"2015년 국회의사당에 설치된 이순신 장군 동상이 역사 고증을 반영해 교체\"", "key": "조선의 진짜 갑옷은 두정갑! 쇠조각을 1,500개 넘게 붙인 튼튼한 옷이었어요.", "q": "영상에서 '조선 시대 대표 갑옷'이라고 소개한 것은 무엇인가요?", "opts": [ "두정갑", "투구", "비단옷" ], "ans": 0, "why": "영상 1분 3초에 \"조선 시대 대표 갑옷, 두정갑\"이라고 나와요. 쇠로 만든 작은 미늘 1,500개 이상을 두정으로 고정한 갑옷이에요." } ], "news": [ { "id": "KbvFLuHw8wg", "url": "https://www.youtube.com/watch?v=KbvFLuHw8wg", "title": "친구 사이에 벌어진 살벌한 돈 갈등?!ㅣ[ep.1] 내 돈 갚아!ㅣ자본주의 편의점", "ch": "EBS 키즈", "dur": 317, "dur_label": "5:17", "summary": "빌린 돈을 갚지 않은 금리가 친구들의 믿음을 잃는 이야기로 '신용'이 무엇인지 알려준다.", "evidence": "자막 4:11 \"신용은 서로를 믿는 마음이에요\"; 4:14 \"약속을 지키지 않으면 믿음도 잃게 돼요\"; 5:02 \"경제에서 신용은 약속대로 돈을 갚을 수 있는 능력을 말해요\"", "key": "신용은 약속대로 돈을 갚는 것이고, 그게 바로 믿음이에요.", "q": "영상에서 말한 '신용'은 무엇일까요?", "opts": [ "약속대로 돈을 갚을 수 있는 능력", "돈을 많이 버는 능력", "친구를 많이 사귀는 능력" ], "ans": 0, "why": "영상 5분 2초에 \"경제에서 신용은 약속대로 돈을 갚을 수 있는 능력\"이라고 알려줘요. 빌린 돈을 갚지 않으면 신용을 잃어요." }, { "id": "r1SyYAV8k_w", "url": "https://www.youtube.com/watch?v=r1SyYAV8k_w", "title": "돈은 왜 마음대로 만들면 안 될까?ㅣ[ep.3] 나와라! 복사 돈ㅣ자본주의 편의점", "ch": "EBS 키즈", "dur": 315, "dur_label": "5:15", "summary": "복사기로 돈을 찍어 쓰던 이득이가 한국은행을 찾아가 돈은 모든 사람의 약속임을 배운다.", "evidence": "자막 3:42 \"여기는 한국은행 우리나라 돈을 관리하는 곳이에요\"; 4:13 \"돈을 만드는 데는 정말 많은 사람들의 노력과 정성이 들어가 있었는데요\"; 5:01 \"돈은 모든 사람들의 약속이에요. 함부로 만들면 안 돼요\"", "key": "돈은 모든 사람이 함께 지키는 약속이에요.", "q": "영상 마지막에 '돈'은 무엇이라고 했을까요?", "opts": [ "모든 사람들의 약속", "복사기로 만드는 종이", "혼자만 쓰는 장난감" ], "ans": 0, "why": "영상 5분 1초에 \"돈은 모든 사람들의 약속이에요. 함부로 만들면 안 돼요\"라고 나와요." }, { "id": "9kefOWGRixc", "url": "https://www.youtube.com/watch?v=9kefOWGRixc", "title": "돈이 많아진다면? 모두 부자가 되지 않을까?ㅣ[ep.5] 돈을 마구 찍어낸다면ㅣ자본주의 편의점", "ch": "EBS 키즈", "dur": 317, "dur_label": "5:17", "summary": "돈을 마구 찍어내면 모두 부자가 될 것 같지만 물건값이 계속 올라 인플레이션이 생긴다는 것을 보여준다.", "evidence": "자막 4:5x \"돈을 너무 많이 찍어내면 물건값이 계속 올라요\"; 5:05 \"이렇게 물건값이 계속 오르는 것을 인플레이션이라고 해요\"", "key": "돈을 마구 찍으면 물건값이 올라요. 그게 인플레이션이에요.", "q": "영상에서 '인플레이션'은 무엇이라고 했나요?", "opts": [ "돈을 너무 많이 찍어 물건값이 계속 오르는 것", "물건값이 계속 내려가는 것", "돈을 많이 모으는 것" ], "ans": 0, "why": "영상 5분 5초에 \"물건값이 계속 오르는 것을 인플레이션이라고 해요\"라고 나와요. 돈이 많아져도 물건값이 오르면 다 부자가 되지는 않아요." }, { "id": "Z97K4lcL0oQ", "url": "https://www.youtube.com/watch?v=Z97K4lcL0oQ", "title": "사고 싶은 걸 마음껏 사도 괜찮을까?ㅣ[ep.6] 쇼핑 스타가 되고 싶어!ㅣ자본주의 편의점", "ch": "EBS 키즈", "dur": 315, "dur_label": "5:15", "summary": "인기순위를 올리려고 빌린 돈(검은 돼지)으로 계속 쇼핑한 금리가 빚더미에 앉는 이야기로 똑똑한 소비를 알려준다.", "evidence": "자막 2:52 \"검은 돼지가 쇼핑할 돈을 빌려준대요\"; 3:40 \"빌린 돈이 너무 많아서 검은 돼지가 엄청 커졌어요\"; 5:05 \"남을 따라 사는 소비는 위험해요. 우리 모두 똑똑한 소비자가 되어요\"", "key": "남을 따라 사는 소비는 위험해요. 내게 정말 필요한지 먼저 생각해요.", "q": "영상 마지막에 '남을 따라 사는 소비'는 어떻다고 했나요?", "opts": [ "위험해요", "아주 좋아요", "돈이 벌려요" ], "ans": 0, "why": "영상 5분 5초에 \"남을 따라 사는 소비는 위험해요. 우리 모두 똑똑한 소비자가 되어요\"라고 나와요." }, { "id": "A9hwGXfgLRk", "url": "https://www.youtube.com/watch?v=A9hwGXfgLRk", "title": "금리와 함께 복리의 마법을 알아볼까요?ㅣ[ep.7] 시간을 먹고 자라는 돈ㅣ자본주의 편의점", "ch": "EBS 키즈", "dur": 317, "dur_label": "5:17", "summary": "월급을 받자마자 저축만 하던 회사원의 돈이 10년 뒤 눈덩이처럼 커지는 모습으로 복리를 설명한다.", "evidence": "자막 4:38 \"돈의 이자가 눈덩이처럼 커졌어요\"; 5:02 \"돈은 시간을 먹고 자란답니다\"; 5:05 \"이자가 붙고 그 이자에도 또 이자가 붙어요. 이게 바로 복리의 마법이에요\"", "key": "복리는 이자에 또 이자가 붙어서 시간이 지나면 눈덩이처럼 커지는 거예요.", "q": "영상에서 '복리'는 무엇이라고 했나요?", "opts": [ "이자가 붙고 그 이자에도 또 이자가 붙는 것", "이자를 딱 한 번만 받는 것", "돈을 빌려 쓰는 것" ], "ans": 0, "why": "영상 5분 5초에 \"이자가 붙고 그 이자에도 또 이자가 붙어요. 이게 바로 복리의 마법\"이라고 나와요." }, { "id": "flHXHIMsRc4", "url": "https://www.youtube.com/watch?v=flHXHIMsRc4", "title": "이득이와 함께 은행의 시작을 알아보자!ㅣ[ep.8] 황금 동상이 된 이득이ㅣ자본주의 편의점", "ch": "EBS 키즈", "dur": 315, "dur_label": "5:15", "summary": "금을 맡아 보관증을 써 주던 옛날 영국 금세공업자의 가게가 오늘날 은행의 시작이 되었음을 보여준다.", "evidence": "자막 2:41 \"이 집 주인은 금을 다루는 금세공업자래요\"; 2:50 \"사람들이 금을 맡기면 보관증을 써 주는데요\"; 4:23 \"그렇게 탄생한 곳이 바로 영란은행\"; 5:02 \"금을 보관하고 보관증을 써 줬어요. 이것이 오늘날 은행에 바탕이 되었답니다\"", "key": "금을 맡기고 보관증을 써 주던 가게가 오늘날 은행의 시작이었어요.", "q": "영상에서 오늘날 은행의 바탕이 되었다고 한 것은?", "opts": [ "금을 맡기고 보관증을 써 준 금세공업자의 가게", "물건을 파는 편의점", "금반지를 만드는 공장" ], "ans": 0, "why": "영상 5분 2초에 \"옛날 금세공업자들은 금을 보관하고 보관증을 써 줬어요. 이것이 오늘날 은행에 바탕이 되었답니다\"라고 나와요." }, { "id": "Y1IJ7MgrbQ4", "url": "https://www.youtube.com/watch?v=Y1IJ7MgrbQ4", "title": "돈을 키우는 투자는 왜 필요할까?ㅣ[ep.9] 황금 공룡알 부화 대작전ㅣ자본주의 편의점", "ch": "EBS 키즈", "dur": 317, "dur_label": "5:17", "summary": "모아 둔 돈만으로는 물가가 오르면 부족해질 수 있어, 돈을 키우는 투자도 배워야 한다는 것을 알려준다.", "evidence": "자막 3:51 \"모은 코인 중 2,000 코인을 대장간에 투자했어요\"; 4:13 \"투자한 돈이 3,000 코인이 되어 돌아왔어요\"; 5:02 \"물건은 조금씩 올라요. 그래서 열심히 돈을 모아도 무서울 수가 있어요. 모은 돈을 키우는 투자도 배워야 해요\"", "key": "투자하면 돈이 늘 수도 있어요. 그래서 투자도 차근차근 배워요.", "q": "영상에서 이득이가 대장간에 2,000코인을 투자해서 돌려받은 코인은 몇 개였나요?", "opts": [ "3,000코인", "2,000코인", "1,000코인" ], "ans": 0, "why": "영상 4분 13초에 \"투자한 돈이 3,000 코인이 되어 돌아왔어요\"라고 나와요. 2,000코인을 투자해 3,000코인이 되었어요." } ] };
+/*__BANKS_END__*/
+
+function bankOf(sub) { return BANKS[sub.id] || []; }
+function dailyIndex(sub, d) {
+  const b = bankOf(sub);
+  if (!b.length) return 0;
+  return (dayNumber(d) + (sub.rot || 0)) % b.length;
+}
+function dailyItem(sub, d) { const b = bankOf(sub); return b.length ? b[dailyIndex(sub, d)] : null; }
+function dailySentIdx(d) { return (dayNumber(d) * 7 + 3) % ALL_SENTENCES.length; }
+
+/* 기존 퀴즈 배열을 '검증된 영상 퀴즈'로 교체 (영상 1편 = 문제 1개) */
+SUBJECTS.forEach((s, i) => {
+  s.rot = i * 2;
+  const b = bankOf(s);
+  if (b.length) {
+    s.quiz = b.map(it => ({
+      q: it.q, opts: it.opts, ans: it.ans, why: it.why, key: it.key,
+      video: { title: it.title, ch: it.ch, dur: it.dur, dur_label: it.dur_label, url: it.url, summary: it.summary }
+    }));
+  }
+});
+
 const EMOJI_CHOICES = ['🦁','🐰','🐶','🐱','🦊','🐼','🐨','🐯','🐻','🐷','🐸','🐵','🦄','🐧','🐢','🦋'];
 const DEFAULT_PROFILES = [
   { id: 'p1', name: '찬우', emoji: '🦁' },
@@ -642,14 +725,24 @@ let state = {
   settings: { rate: 1.0 }
 };
 
-function todayKey(d = new Date()) {
-  const p = n => String(n).padStart(2, '0');
-  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+/* 하루 계산은 기기 시간대와 상관없이 한국시간(KST) 기준으로 고정한다. */
+const KST_OFFSET_MIN = 9 * 60;
+let DAY_OVERRIDE = null;            // '?d=YYYY-MM-DD' (날짜 로테이션 확인용)
+function refNow() { return DAY_OVERRIDE ? new Date(DAY_OVERRIDE + 'T12:00:00+09:00') : new Date(); }
+function kstParts(d) {
+  const t = new Date((d || refNow()).getTime() + KST_OFFSET_MIN * 60000);
+  const y = t.getUTCFullYear(), m = t.getUTCMonth() + 1, day = t.getUTCDate();
+  return { y: y, m: m, d: day, wd: new Date(Date.UTC(y, m - 1, day)).getUTCDay() };
 }
-function dateLabel(d = new Date()) {
-  const w = ['일', '월', '화', '수', '목', '금', '토'][d.getDay()];
-  return (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + w + '요일';
+function todayKey(d) {
+  const p = kstParts(d), pad = n => String(n).padStart(2, '0');
+  return p.y + '-' + pad(p.m) + '-' + pad(p.d);
 }
+function dateLabel(d) {
+  const p = kstParts(d);
+  return p.m + '월 ' + p.d + '일 ' + ['일', '월', '화', '수', '목', '금', '토'][p.wd] + '요일';
+}
+function dayNumber(d) { const p = kstParts(d); return Math.floor(Date.UTC(p.y, p.m - 1, p.d) / 86400000); }
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 let saveTimer = null;
@@ -705,7 +798,7 @@ function awardSpeak(sid, si) {
 /* ─────────────────────────── 4. 화면 상태 ─────────────────────────── */
 
 let view = 'home';
-let subjectTab = 'learn';   // learn | quiz
+let subjectTab = 'today';   // today | learn | review
 let engStep = 0;            // 0,1,2 또는 'all'
 let quiz = { i: 0, picked: null, feedback: null };
 let practice = { idx: null, rec: null, timer: null, listening: false, ended: false };
@@ -772,33 +865,42 @@ function greeting() {
   return '늦었는데 대단해';
 }
 
-function subjectCardHTML(sub) {
-  const n = quizCount(state.activeId, sub.id);
-  const speak = speakCount(state.activeId, sub.id);
-  const dots = Array.from({ length: sub.quiz.length }, (_, i) => '<i class="' + (i < n ? 'on' : '') + '" style="--dotcolor:' + sub.dot + '"></i>').join('');
-  const count = n + '/' + sub.quiz.length + (speak ? ' · 🎤' + speak : '');
-  return '<button class="subj" data-action="open-subject" data-id="' + sub.id + '">' +
-    '<span class="s-ico" style="--soft:' + sub.soft + '">' + sub.emoji + '</span>' +
-    '<span class="s-body">' +
-      '<span class="s-name">' + sub.name + '</span>' +
-      '<span class="s-line">' + esc(sub.line) + '</span>' +
-    '</span>' +
-    '<span class="s-right"><span class="dots">' + dots + '</span><span class="s-count">' + count + '</span></span>' +
+function dailyCardHTML(sub) {
+  const item = dailyItem(sub);
+  const done = quizCount(state.activeId, sub.id) > 0;
+  const q = item ? item.q : (sub.line || '');
+  return '<button class="daily' + (done ? ' done' : '') + '" data-action="open-subject" data-id="' + sub.id + '">' +
+    '<span class="d-top"><span class="d-ico" style="--soft:' + sub.soft + '">' + sub.emoji + '</span>' +
+      '<span class="d-name">' + sub.name + '</span>' +
+      '<span class="d-badge">' + (done ? '🏅 오늘 완료' : '1문제 + 영상 1') + '</span></span>' +
+    '<span class="d-q">' + esc(q) + '</span>' +
+    '<span class="d-vid">🎬 ' + esc(item ? item.video.title : '영상 준비 중') + (item ? ' · ' + item.video.dur_label : '') + '</span>' +
   '</button>';
+}
+
+function inviteCardHTML() {
+  return '<div class="invite-card">' +
+    '<div class="ic-top"><span class="ic-emoji">👋</span>' +
+      '<div><b>친구 초대하기</b><small>링크만 보내면 이름 적고 바로 시작!</small></div></div>' +
+    '<button class="btn-primary" data-action="invite-open" style="margin-top:10px;padding:13px">🔗 초대 링크 만들기</button>' +
+    (appBaseUrl() ? '' : '<p class="note" style="text-align:left">파일로 열었을 땐 링크 공유가 안 돼요. https 주소로 열어 주세요.</p>') +
+  '</div>';
 }
 
 function renderHome() {
   const me = activeProfile();
   const todayStamp = dayStamps(state.activeId);
-  const todayQuiz = dayQuizStamps(state.activeId);
-  const todaySent = ALL_SENTENCES[new Date().getDate() % ALL_SENTENCES.length];
-  const doneSubjects = SUBJECTS.filter(s => quizCount(state.activeId, s.id) === s.quiz.length).length;
-
+  const doneSubjects = SUBJECTS.filter(s => quizCount(state.activeId, s.id) > 0).length;
   const greet =
-    todayQuiz === 0 ? '오늘 첫 도장을 찍어 볼까?' :
+    doneSubjects === 0 ? '오늘 첫 문제부터 풀어 볼까?' :
     doneSubjects >= 5 ? '5과목 전부 도장! 오늘 최고야 🎉' :
-    todayQuiz >= 9 ? '벌써 ' + todayQuiz + '개 도장! 기세 좋다 🔥' :
-    '오늘 ' + todayQuiz + '개 도장! 조금만 더 가자 💪';
+    doneSubjects >= 3 ? doneSubjects + '과목 완료! 기세 좋다 🔥' :
+    '오늘 ' + doneSubjects + '과목 완료! 조금만 더 가자 💪';
+
+  const welcome = welcomeName
+    ? '<div class="welcome"><span>🎉</span><div><b>' + esc(welcomeName) + '</b>야, 반가워! 아래 오늘의 문제부터 하나 풀어 봐 😊</div>' +
+      '<button data-action="dismiss-welcome" aria-label="닫기">✕</button></div>'
+    : '';
 
   $('#view-home').innerHTML =
     '<div class="hero">' +
@@ -811,18 +913,12 @@ function renderHome() {
         '<span class="hero-stat"><em>📖</em>' + doneSubjects + '/5 과목 완료</span>' +
       '</div>' +
     '</div>' +
+    welcome +
 
-    '<div class="sec-head"><h3>오늘의 영어 한 문장</h3>' +
-      '<button class="more" data-action="open-subject" data-id="english">영어 전체 →</button></div>' +
-    '<div class="enq">' +
-      '<span class="q-emoji">' + todaySent.emoji + '</span>' +
-      '<span class="q-body"><span class="q-en">' + esc(todaySent.en) + '</span>' +
-        '<span class="q-ko">' + esc(todaySent.ko) + '</span></span>' +
-      '<button class="icon-btn" data-action="say-sentence" data-idx="' + todaySent.idx + '" aria-label="듣기">🔊</button>' +
-    '</div>' +
+    '<div class="sec-head"><h3>🎯 오늘의 학습 5과목</h3><span class="more">하루 1문제 + 영상 1개</span></div>' +
+    '<div class="subj-grid">' + SUBJECTS.map(dailyCardHTML).join('') + '</div>' +
 
-    '<div class="sec-head"><h3>오늘 공부할 5과목</h3><span class="more">퀴즈 3~4문제</span></div>' +
-    '<div class="subj-grid">' + SUBJECTS.map(subjectCardHTML).join('') + '</div>' +
+    inviteCardHTML() +
 
     '<div class="sec-head"><h3>우리 반 오늘</h3>' +
       '<button class="more" data-action="go" data-view="board">도장판 →</button></div>' +
@@ -850,12 +946,13 @@ function boardMiniHTML() {
 /* ─────────────────────────── 8. 렌더: 공부(과목 목록) ─────────────────────────── */
 
 function renderStudy() {
-  const today = dayQuizStamps(state.activeId);
+  const done = SUBJECTS.filter(x => quizCount(state.activeId, x.id) > 0).length;
+  const totalQ = SUBJECTS.reduce((n, x) => n + x.quiz.length, 0);
   $('#view-study').innerHTML =
     '<h2 class="page-title">📖 오늘의 공부</h2>' +
-    '<p class="page-sub">과목마다 영상 2~3개 · 핵심 카드 · 퀴즈 3~4문제 · 도장</p>' +
-    '<div class="subj-grid">' + SUBJECTS.map(subjectCardHTML).join('') + '</div>' +
-    '<div class="note">오늘 모은 퀴즈 도장 <b>' + today + '/' + TOTAL_QUIZ + '</b> · 영어 따라읽기 도장은 따로 쌓여요 🎤</div>';
+    '<p class="page-sub">과목마다 오늘 1문제 + 그 문제와 이어지는 영상 1개</p>' +
+    '<div class="subj-grid">' + SUBJECTS.map(dailyCardHTML).join('') + '</div>' +
+    '<div class="note">오늘 ' + done + '/5 과목 완료 · 과목별 문제는 모두 ' + totalQ + '개(영상 ' + totalQ + '편) 준비돼 있어요 🎬</div>';
   renderTopbar();
 }
 
@@ -871,13 +968,98 @@ function renderSubject() {
       '<div><h2>' + sub.name + '</h2><p>' + esc(sub.line) + '</p></div>' +
     '</div>' +
     '<div class="seg2">' +
+      '<button class="' + (subjectTab === 'today' ? 'on' : '') + '" data-action="subtab" data-tab="today">🎯 오늘</button>' +
       '<button class="' + (subjectTab === 'learn' ? 'on' : '') + '" data-action="subtab" data-tab="learn">📚 배우기</button>' +
-      '<button class="' + (subjectTab === 'quiz' ? 'on' : '') + '" data-action="subtab" data-tab="quiz">🎯 퀴즈 ' + quizCount(state.activeId, sub.id) + '/' + sub.quiz.length + '</button>' +
+      '<button class="' + (subjectTab === 'review' ? 'on' : '') + '" data-action="subtab" data-tab="review">🔁 복습</button>' +
     '</div>';
 
-  const body = subjectTab === 'learn' ? learnHTML(sub) : quizHTML(sub);
+  const body = subjectTab === 'today' ? todayHTML(sub) : (subjectTab === 'learn' ? learnHTML(sub) : quizHTML(sub));
   $('#view-subject').innerHTML = head + body;
   renderTopbar();
+}
+
+/* ── 오늘의 학습(문제 1 + 영상 1) ── */
+function videoCardHTML(v, unlocked, anchor) {
+  if (!v) return '';
+  return '<a class="vidcard' + (unlocked ? ' unlock' : '') + '"' + (anchor ? ' id="' + anchor + '"' : '') +
+    ' href="' + v.url + '" target="_blank" rel="noopener noreferrer">' +
+    '<span class="v-thumb">▶️</span>' +
+    '<span class="v-body"><span class="v-t">' + esc(v.title) + '</span>' +
+      '<span class="v-d">' + esc(v.ch) + ' · ' + v.dur_label + ' · 유튜브에서 보기</span></span>' +
+    '<span class="v-go">↗</span></a>';
+}
+
+function todayHTML(sub) {
+  const item = dailyItem(sub);
+  if (!item) {
+    return '<div class="qcard"><div class="result"><div class="big">🌱</div>' +
+      '<h3>이 과목 영상은 준비 중이에요</h3><p>검증된 영상이 아직 없어서 오늘은 배우기 카드로 공부해요.</p></div></div>' +
+      '<button class="btn-ghost" data-action="subtab" data-tab="learn">📚 배우기 카드 보기</button>';
+  }
+  const qi = dailyIndex(sub);
+  const rec = (subRec(state.activeId, sub.id) || { q: {} }).q || {};
+  const got = !!rec[qi];
+
+  let h = '<div class="keyline" style="--soft:' + sub.soft + ';--deep:' + sub.deep + ';--line2:' + sub.color + '33">' +
+    '<span class="k-label">오늘의 핵심 한 줄</span>' + esc(item.key) + '</div>';
+
+  if (sub.id === 'english') h += todaySentenceHTML();
+
+  h += '<div class="sec-head"><h3>🎯 오늘의 퀴즈</h3><span class="more">1문제</span></div>';
+  h += todayQuizHTML(sub, item, qi, got);
+  h += '<div class="sec-head"><h3>🎬 오늘의 영상</h3><span class="more">퀴즈와 이어지는 영상</span></div>';
+  h += videoCardHTML(item.video, got, 'today-video');
+  h += '<p class="note">' + esc(item.video.summary || '') + '</p>';
+  h += got
+    ? '<p class="note" style="color:#0F6B4C;font-weight:900">🏅 도장 받았어요! 영상으로 한 번 더 확인해 봐요.</p>'
+    : '<p class="note">영상을 먼저 보고 문제를 풀어도 좋아요 😊</p>';
+  h += '<button class="btn-ghost" data-action="subtab" data-tab="review" style="margin-top:14px">🔁 지난 문제 전체 복습 (' + sub.quiz.length + '개)</button>';
+  return h;
+}
+
+function todayQuizHTML(sub, item, qi, got) {
+  const picked = (quiz.i === qi) ? quiz.picked : null;
+  let h = '<div class="qcard">' +
+    '<div class="qnum">오늘의 문제 · ' + dateLabel() + '</div>' +
+    '<div class="qtext">' + esc(item.q) + '</div>' +
+    '<div class="opts">' + item.opts.map((o, i) => {
+      let cls = '';
+      if (picked !== null) {
+        if (i === item.ans) cls = 'right';
+        else if (i === picked) cls = 'wrong';
+      }
+      return '<button class="opt ' + cls + '" data-action="answer" data-i="' + i + '"' + (picked !== null ? ' disabled' : '') + '>' +
+        '<span class="num">' + (i + 1) + '</span><span>' + esc(o) + '</span></button>';
+    }).join('') + '</div>';
+
+  if (picked !== null) {
+    const ok = picked === item.ans;
+    h += '<div class="feedback ' + (ok ? 'ok' : 'no') + '">' +
+      '<span class="fb-t">' + (ok ? (got ? '정답이야! 🏅 도장 받았어요' : '정답이야! 🏅 도장 +1') : '아쉬워! 정답은 "' + esc(item.opts[item.ans]) + '"') + '</span>' +
+      esc(item.why) + '</div>' +
+      (ok ? '<button class="btn-primary" data-action="scroll-video">🎬 오늘의 영상 보러 가기</button>'
+          : '<button class="btn-primary" data-action="retry-today">🔁 한 번 더 풀기</button>');
+  }
+  h += '</div>';
+  return h;
+}
+
+function todaySentenceHTML() {
+  const idx = dailySentIdx();
+  const s = ALL_SENTENCES[idx];
+  const done = !!(((subRec(state.activeId, 'english', todayKey()) || {}).s) || {})[idx];
+  return '<div class="sec-head"><h3>🗣️ 오늘의 영어 문장</h3><span class="more">듣고 따라 말해요</span></div>' +
+    '<article class="sent ' + (done ? 'done' : '') + '" data-sent="' + idx + '">' +
+      '<div class="sent-head"><span class="sent-e">' + s.emoji + '</span>' +
+        '<div class="sent-main"><div class="sent-en">' + esc(s.en) + '</div>' +
+          '<div class="sent-ko">' + esc(s.ko) + '</div>' +
+          '<div class="sent-tip">🗣️ ' + esc(s.tip) + '</div></div></div>' +
+      '<div class="sent-btns">' +
+        '<button data-action="say" data-idx="' + idx + '">🔊 듣기</button>' +
+        '<button class="mic" data-action="practice" data-idx="' + idx + '">🎤 따라 말하기</button></div>' +
+      '<div class="practice" hidden></div>' +
+      '<div class="sent-stamp">🏅 오늘 따라읽기 도장 받았어요</div>' +
+    '</article>';
 }
 
 function learnHTML(sub) {
@@ -891,10 +1073,21 @@ function learnHTML(sub) {
       '<div class="story"><span class="st-e">' + st.e + '</span>' +
       '<div><div class="st-t">' + esc(st.t) + '</div><div class="st-d">' + esc(st.d) + '</div></div></div>'
     ).join('');
-    h += '<div class="sec-head"><h3>🎬 같이 볼 영상</h3><span class="more">추천 링크</span></div>' +
-      '<div class="yt-list">' + ytListHTML(sub) + '</div>';
   }
+  h += '<div class="sec-head"><h3>🎬 이 과목 영상 모음</h3><span class="more">' + bankOf(sub).length + '편 · 10분 이내</span></div>' +
+    videoListHTML(sub);
   return h;
+}
+
+function videoListHTML(sub) {
+  const b = bankOf(sub);
+  if (!b.length) return '<p class="note">아직 검증된 영상이 없어요.</p>';
+  return '<div class="yt-list">' + b.map(it =>
+    '<a class="yt" href="' + it.url + '" target="_blank" rel="noopener noreferrer">' +
+      '<span class="yt-ico">▶️</span>' +
+      '<span class="yt-t">' + esc(it.title) + '<span class="yt-d">' + esc(it.ch) + ' · ' + it.dur_label + '</span></span>' +
+      '<span class="yt-go">↗</span></a>'
+  ).join('') + '</div>';
 }
 
 function ytListHTML(sub) {
@@ -1182,6 +1375,12 @@ function renderSettings() {
     '</div>' +
 
     '<div class="set-card">' +
+      '<h3>👋 친구 초대</h3>' +
+      '<p class="hint">초대 링크를 단톡방에 보내면, 친구가 이름과 동물을 고르고 자기 자리로 들어와요.</p>' +
+      '<button class="btn-primary" data-action="invite-open" style="margin-top:4px;padding:13px">🔗 초대 링크 만들기</button>' +
+    '</div>' +
+
+    '<div class="set-card">' +
       '<h3>🧹 기록 지우기</h3>' +
       '<p class="hint">도장 기록은 이 폰에만 있어요. 지우면 되돌릴 수 없어요.</p>' +
       '<button class="btn-ghost" data-action="reset-today">오늘 기록만 지우기</button>' +
@@ -1192,6 +1391,172 @@ function renderSettings() {
       '인터넷 없이도 열려요 · 기록은 이 기기에만</div>';
 
   renderTopbar();
+}
+
+/* ─────────────────────────── 11-b. 친구 초대 · 참여 ─────────────────────────── */
+
+let welcomeName = '';
+let joinSlot = 0;
+let joinPick = '';
+
+function appBaseUrl() {
+  try {
+    const u = location.origin + location.pathname;
+    return /^https?:/.test(u) ? u.replace(/index\.html$/, '') : '';
+  } catch (e) { return ''; }
+}
+function inviteUrl(slot) { return appBaseUrl() + '?join=1&slot=' + (slot + 1); }
+
+function inviteMessage(slot) {
+  const p = state.profiles[slot];
+  return '안녕! 우리 애들 공부방 초대 링크야 📚\n' +
+    '하루 1문제 + 딱 맞는 영상 1개, 5과목(수학·영어·한국사·위인·시사상식)이에요.\n' +
+    '아래 링크 누르고 이름이랑 동물만 고르면 바로 시작!' +
+    (p && p.name && p.name.indexOf('친구') !== 0 ? ' (' + p.name + ' 자리)' : '') + '\n' +
+    inviteUrl(slot);
+}
+
+async function copyText(text, btn, okMsg) {
+  let ok = false;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text); ok = true;
+    }
+  } catch (e) { ok = false; }
+  if (!ok) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed'; ta.style.top = '-1000px'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+      ok = document.execCommand('copy'); ta.remove();
+    } catch (e) { ok = false; }
+  }
+  if (ok) {
+    if (btn) fx('📋 복사!', btn);
+    toast(okMsg || '복사했어요! 단톡방에 붙여넣기 하세요 📋');
+  } else {
+    showManualCopy(text);
+  }
+}
+
+async function shareText(text, btn) {
+  if (navigator.share) {
+    try { await navigator.share({ title: '우리 반 공부방', text: text }); return; } catch (e) {
+      if (e && e.name === 'AbortError') return;
+    }
+  }
+  await copyText(text, btn, '초대 링크를 복사했어요! 단톡방에 붙여넣기 하세요 📋');
+}
+
+function nextEmptySlot() {
+  const i = state.profiles.findIndex(p => !p.name || p.name.indexOf('친구') === 0 || p.name === '');
+  return i >= 0 ? i : 0;
+}
+
+function openInvite() {
+  const url = appBaseUrl();
+  const rows = state.profiles.map((p, i) =>
+    '<div class="slot-row"><span class="sr-ava">' + p.emoji + '</span>' +
+      '<span class="sr-name">' + esc(p.name) + '</span>' +
+      '<span class="sr-tag">' + (i + 1) + '번</span>' +
+      '<button data-action="invite-share" data-slot="' + i + '">공유</button></div>'
+  ).join('');
+  showModal(
+    '<h3>👋 친구 초대 링크</h3>' +
+    '<p>' + (url ? '자리별 링크예요. 보내려는 친구 자리의 [공유]를 누르면 단톡방 문구까지 한 번에 돼요.' : '주소(https)로 열었을 때만 링크를 만들 수 있어요.') + '</p>' +
+    rows +
+    '<div class="m-btns">' +
+      '<button data-action="close-modal">닫기</button>' +
+      '<button class="primary" data-action="invite-copy" data-slot="' + nextEmptySlot() + '">빈자리 링크 복사</button>' +
+    '</div>' +
+    '<p class="note" style="text-align:left">친구가 링크를 열면 이름·동물을 고르는 화면이 나오고, 고른 자리에 그 친구가 들어와요.</p>'
+  );
+}
+
+function showModal(html) {
+  const wrap = $('#modalWrap');
+  wrap.hidden = false;
+  wrap.className = 'modal-bg';
+  wrap.innerHTML = '<div class="modal" role="dialog" aria-modal="true">' + html + '</div>';
+}
+
+/* ── 참여 화면 ── */
+function joinSlotFromUrl() {
+  const m = /[?&]slot=(\d+)/.exec(location.search);
+  const n = m ? Number(m[1]) : (nextEmptySlot() + 1);
+  return Math.min(5, Math.max(1, n || 1)) - 1;
+}
+
+function startJoin() {
+  welcomeName = '';
+  joinSlot = joinSlotFromUrl();
+  joinPick = '';
+  showView('join');
+}
+
+function renderJoin() {
+  const p = state.profiles[joinSlot] || state.profiles[0];
+  const used = state.profiles.filter(x => x.id !== p.id).map(x => x.emoji);
+  const emojis = EMOJI_CHOICES.map(e =>
+    '<button class="' + (joinPick === e ? 'on' : '') + (used.indexOf(e) >= 0 ? ' taken' : '') + '"' +
+    ' data-action="join-emoji" data-e="' + e + '"' + (used.indexOf(e) >= 0 ? ' aria-disabled="true"' : '') + '>' + e + '</button>'
+  ).join('');
+  const takenName = (p.name && p.name.indexOf('친구') !== 0) ? p.name : '';
+
+  $('#view-join').innerHTML =
+    '<div class="join-wrap">' +
+      '<div class="join-hero">' + (joinPick || '🐣') + '</div>' +
+      '<h1>반가워! 우리 반 공부방에 초대됐어 🎉</h1>' +
+      '<p class="join-sub">이름(별명)을 적고, 내 동물 친구를 골라 줘.<br>내 자리는 <b>' + (joinSlot + 1) + '번</b>으로 준비돼 있어!' +
+        (takenName ? '<br>(지금 ' + esc(takenName) + ' 이름이 있어요 — 새 이름으로 바꿀 수 있어)' : '') + '</p>' +
+
+      '<div class="join-field">' +
+        '<label>내 이름</label>' +
+        '<input id="joinName" maxlength="8" placeholder="예: 서준" autocomplete="off" autocapitalize="off" spellcheck="false" value="">' +
+        '<div class="join-err" id="joinErr"></div>' +
+      '</div>' +
+
+      '<div class="join-field">' +
+        '<label>내 동물 친구 (하나만 골라 줘)</label>' +
+        '<div class="emoji-grid">' + emojis + '</div>' +
+      '</div>' +
+
+      '<button class="btn-primary" data-action="join-submit">이 이름으로 시작하기 🚀</button>' +
+      '<button class="btn-ghost" data-action="join-later">이미 들어왔어요 → 그냥 볼래요</button>' +
+      '<p class="note">이름과 도장은 이 폰에만 저장돼요. 인터넷 없이도 열려요.</p>' +
+    '</div>';
+
+  const el = $('#joinName');
+  if (el) {
+    el.addEventListener('input', () => {
+      const err = $('#joinErr'); if (err) err.textContent = '';
+    });
+  }
+}
+
+function joinSubmit() {
+  const input = $('#joinName');
+  const err = $('#joinErr');
+  const name = (input ? input.value : '').trim().replace(/\s+/g, ' ');
+  const len = Array.from(name).length;
+  if (!len) { if (err) err.textContent = '이름(별명)을 적어 줘!'; if (input) input.focus(); return; }
+  if (len > 8) { if (err) err.textContent = '이름은 8글자까지 쓸 수 있어요.'; return; }
+  const dup = state.profiles.some(p => p.id !== state.profiles[joinSlot].id && p.name && p.name.trim() === name);
+  if (dup) { if (err) err.textContent = '「' + name + '」는 이미 친구가 쓰고 있어. 다른 이름으로 해 줘!'; return; }
+  if (!joinPick) { if (err) err.textContent = '동물 친구를 하나 골라 줘!'; return; }
+  const used = state.profiles.filter(p => p.id !== state.profiles[joinSlot].id).map(p => p.emoji);
+  if (used.indexOf(joinPick) >= 0) { if (err) err.textContent = '그 동물은 다른 친구가 쓰고 있어. 다른 동물로 골라 줘!'; return; }
+
+  const p = state.profiles[joinSlot];
+  p.name = name;
+  p.emoji = joinPick;
+  state.activeId = p.id;
+  persist();
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  welcomeName = name;
+  showView('home');
+  toast(name + '야, 반가워! 🎉');
 }
 
 /* ─────────────────────────── 12. 화면 전환 ─────────────────────────── */
@@ -1214,7 +1579,12 @@ function showView(name, opts = {}) {
   else if (name === 'subject') renderSubject();
   else if (name === 'board') renderBoard();
   else if (name === 'settings') renderSettings();
+  else if (name === 'join') renderJoin();
 
+  const tb = document.querySelector('.topbar');
+  const tabbar = document.querySelector('.tabbar');
+  if (tb) tb.hidden = (name === 'join');
+  if (tabbar) tabbar.hidden = (name === 'join');
   renderFriendStrip();
   if (!opts.keepScroll) window.scrollTo({ top: 0, behavior: 'instant' in document.documentElement.style ? 'instant' : 'auto' });
 }
@@ -1222,8 +1592,8 @@ function showView(name, opts = {}) {
 function openSubject(id) {
   if (view !== 'subject') subjectFrom = view;
   currentSubjectId = id;
-  subjectTab = 'learn';
-  quiz = { i: 0, picked: null, feedback: null };
+  subjectTab = 'today';
+  quiz = { i: dailyIndex(SUBJECT_BY_ID[id] || { id: id }), picked: null, feedback: null };
   showView('subject');
 }
 
@@ -1547,10 +1917,67 @@ document.addEventListener('click', (e) => {
       openSubject(el.dataset.id);
       break;
 
-    case 'subtab':
+    case 'subtab': {
       subjectTab = el.dataset.tab;
-      if (subjectTab === 'quiz') quiz = { i: 0, picked: null, feedback: null };
+      const sub = SUBJECT_BY_ID[currentSubjectId];
+      quiz = { i: subjectTab === 'review' ? 0 : dailyIndex(sub), picked: null, feedback: null };
+      closePractice();
       renderSubject();
+      break;
+    }
+
+    case 'retry-today':
+      quiz = { i: dailyIndex(SUBJECT_BY_ID[currentSubjectId]), picked: null, feedback: null };
+      renderSubject();
+      break;
+
+    case 'scroll-video': {
+      const v = $('#today-video');
+      if (v) v.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      break;
+    }
+
+    case 'dismiss-welcome':
+      welcomeName = '';
+      renderHome();
+      break;
+
+    case 'invite-open':
+      openInvite();
+      break;
+
+    case 'invite-share': {
+      const slot = Number(el.dataset.slot || 0);
+      shareText(inviteMessage(slot), el);
+      break;
+    }
+
+    case 'invite-copy': {
+      const slot = Number(el.dataset.slot || 0);
+      copyText(inviteMessage(slot), el);
+      break;
+    }
+
+    case 'join-emoji': {
+      const e = el.dataset.e;
+      const p = state.profiles[joinSlot] || {};
+      const used = state.profiles.filter(x => x.id !== p.id).map(x => x.emoji);
+      if (used.indexOf(e) >= 0) break;
+      const keep = $('#joinName') ? $('#joinName').value : '';
+      joinPick = e;
+      renderJoin();
+      const inp = $('#joinName');
+      if (inp) inp.value = keep;
+      break;
+    }
+
+    case 'join-submit':
+      joinSubmit();
+      break;
+
+    case 'join-later':
+      try { history.replaceState(null, '', location.pathname); } catch (e) {}
+      showView('home');
       break;
 
     case 'answer': {
@@ -1723,6 +2150,9 @@ function mergeLoaded(loaded) {
 }
 
 async function init() {
+  const m = /[?&]d=(\d{4}-\d{2}-\d{2})/.exec(location.search);
+  if (m) DAY_OVERRIDE = m[1];
+
   const loaded = await SyncAdapter.load();
   mergeLoaded(loaded);
 
@@ -1739,7 +2169,8 @@ async function init() {
     }
   }
 
-  showView('home');
+  if (/[?&]join=1/.test(location.search)) startJoin();
+  else showView('home');
 
   // 다른 폰의 변경을 받는 자리 (지금 어댑터는 no-op)
   SyncAdapter.subscribe(() => {
