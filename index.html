@@ -678,9 +678,9 @@ SUBJECTS.forEach((s, i) => {
   }
 });
 
-const EMOJI_CHOICES = ['🦁','🐰','🐶','🐱','🦊','🐼','🐨','🐯','🐻','🐷','🐸','🐵','🦄','🐧','🐢','🦋'];
+const EMOJI_CHOICES = ['🐍','🦁','🐰','🐶','🐱','🦊','🐼','🐨','🐯','🐻','🐷','🐸','🐵','🦄','🐧','🐢','🦋'];
 const DEFAULT_PROFILES = [
-  { id: 'p1', name: '찬우', emoji: '🦁' },
+  { id: 'p1', name: '찬우', emoji: '🐍' },
   { id: 'p2', name: '친구 2', emoji: '🐰' },
   { id: 'p3', name: '친구 3', emoji: '🐶' },
   { id: 'p4', name: '친구 4', emoji: '🐱' },
@@ -721,13 +721,318 @@ const SyncAdapter = {
   subscribe(cb) { return this.adapter.subscribe(cb); }
 };
 
+/* ─────────────────── 2-b. 친구들 폰과 실시간 공유(방) ───────────────────
+   같은 방 코드를 쓰는 폰끼리 이름·동물·도장을 나눠요.
+   - kids_study_profiles : 방 안의 5자리 이름·동물
+   - kids_study_stamps   : 방 안의 도장 (자리 · 날짜 · 과목)
+   - 4초마다 + 화면으로 돌아올 때 당겨오고, 내 기록은 바로 올려요
+   - 인터넷이 없으면 이 폰(localStorage)에 먼저 저장하고 큐에 쌓아 두었다가
+     연결되면 자동으로 올려요. (오프라인에서도 앱은 그대로 동작)
+   ─────────────────────────────────────────────────────────────────── */
+const SB_URL = 'https://dolhmwtbafytvxwfqiny.supabase.co';
+const SB_KEY = 'sb_publishable_2xisH1KOUuhbscdn4t0tFQ_3LU98jkA';
+const ROOM_DEFAULT = 'chanwoo-friends';
+const ROOM_STORE = 'kidsStudyApp.room.v1';
+const QUEUE_STORE = 'kidsStudyApp.syncq.v1';
+const REMOTE_STORE = 'kidsStudyApp.remote.v1';
+const SYNC_MS = 4000;
+
+let roomId = ROOM_DEFAULT;
+let remoteStamps = {};      // { [pid]: { 'YYYY-MM-DD': { [sid]: 1 } } } ← 친구들 폰에서 온 도장
+let syncStatus = 'init';    // init | ok | off
+let syncError = '';
+let syncTimer = null;
+let pulling = false;
+let flushing = false;
+let syncQueue = [];
+let syncSeedDone = false;
+let lastSyncAt = 0;
+let profilePushTimer = null;
+let tablesReady = false;      // 아직 테이블이 없으면 조용히 준비를 기다려요(불필요한 404 없이)
+let specCheckedAt = 0;
+
+function cleanRoom(s) {
+  const v = String(s || '').toLowerCase().replace(/[^a-z0-9\-]/g, '').slice(0, 40);
+  return v || ROOM_DEFAULT;
+}
+function readRoom() {
+  try {
+    const m = /[?&]room=([^&#]+)/.exec(location.search);
+    if (m) {
+      const r = cleanRoom(decodeURIComponent(m[1]));
+      try { localStorage.setItem(ROOM_STORE, r); } catch (e) {}
+      return r;
+    }
+    const s = localStorage.getItem(ROOM_STORE);
+    if (s) return cleanRoom(s);
+  } catch (e) {}
+  return ROOM_DEFAULT;
+}
+
+async function sbReq(path, opts) {
+  opts = opts || {};
+  const headers = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
+  if (opts.prefer) headers.Prefer = opts.prefer;
+  const res = await fetch(SB_URL + path, {
+    method: opts.method || 'GET',
+    headers: headers,
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    let msg = '';
+    try { msg = (await res.text()).slice(0, 160); } catch (e) {}
+    const err = new Error('HTTP ' + res.status + ' ' + msg);
+    err.status = res.status;
+    throw err;
+  }
+  const txt = await res.text();
+  try { return txt ? JSON.parse(txt) : null; } catch (e) { return null; }
+}
+
+/* ── 오프라인 큐 ── */
+function loadQueue() {
+  try {
+    const raw = localStorage.getItem(QUEUE_STORE);
+    const v = raw ? JSON.parse(raw) : [];
+    syncQueue = Array.isArray(v) ? v : [];
+  } catch (e) { syncQueue = []; }
+}
+function saveQueue() {
+  try { localStorage.setItem(QUEUE_STORE, JSON.stringify(syncQueue.slice(-80))); } catch (e) {}
+}
+function opKey(o) {
+  if (o.t === 'profile') return 'p|' + o.room + '|' + o.slot;
+  if (o.t === 'stamp') return 's|' + o.room + '|' + o.slot + '|' + o.date_kst + '|' + o.subject;
+  return o.t + '|' + (o.room || '') + '|' + (o.slot == null ? '' : o.slot) + '|' + (o.date_kst || '');
+}
+function enqueue(op) {
+  const k = opKey(op);
+  const i = syncQueue.findIndex(x => opKey(x) === k);
+  if (i >= 0) syncQueue.splice(i, 1);
+  syncQueue.push(op);
+  saveQueue();
+  if (view !== 'join') flushQueue();
+}
+async function sendOp(op) {
+  if (op.t === 'profile') {
+    return sbReq('/rest/v1/kids_study_profiles', {
+      method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal',
+      body: [{ room_id: op.room, slot: op.slot, name: op.name, avatar: op.avatar, updated_at: op.updated_at }]
+    });
+  }
+  if (op.t === 'stamp') {
+    return sbReq('/rest/v1/kids_study_stamps', {
+      method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal',
+      body: [{ room_id: op.room, slot: op.slot, date_kst: op.date_kst, subject: op.subject, earned_at: op.earned_at }]
+    });
+  }
+  if (op.t === 'del-stamp-day') {
+    return sbReq('/rest/v1/kids_study_stamps?room_id=eq.' + encodeURIComponent(op.room) + '&slot=eq.' + op.slot + '&date_kst=eq.' + encodeURIComponent(op.date_kst), { method: 'DELETE', prefer: 'return=minimal' });
+  }
+  if (op.t === 'del-stamps') {
+    return sbReq('/rest/v1/kids_study_stamps?room_id=eq.' + encodeURIComponent(op.room) + '&slot=eq.' + op.slot, { method: 'DELETE', prefer: 'return=minimal' });
+  }
+  return null;
+}
+async function flushQueue() {
+  if (flushing || !syncQueue.length) return;
+  if (!navigator.onLine || !tablesReady) return;
+  flushing = true;
+  try {
+    while (syncQueue.length) {
+      const op = syncQueue[0];
+      try {
+        await sendOp(op);
+        syncQueue.shift(); saveQueue();
+      } catch (e) {
+        const st = e && e.status;
+        if (st && st >= 400 && st < 500 && st !== 429) {
+          // 형식·권한 오류는 몇 번을 보내도 같으니 큐에서 빼고 다음 것으로
+          syncQueue.shift(); saveQueue();
+          syncError = String((e && e.message) || e);
+          continue;
+        }
+        throw e;
+      }
+    }
+    syncError = '';
+  } catch (e) {
+    syncError = String((e && e.message) || e);
+    setSyncStatus('off');
+  } finally { flushing = false; }
+}
+
+/* ── 올리기 ── */
+function activeSlotIndex() {
+  const i = state.profiles.findIndex(p => p.id === state.activeId);
+  return i;
+}
+function isPlaceholderName(n) { return !n || String(n).indexOf('친구') === 0; }
+function pushProfile(slot) {
+  if (slot == null || slot < 0 || slot > 4) return;
+  const p = state.profiles[slot]; if (!p) return;
+  const at = new Date().toISOString();
+  state.syncMeta = state.syncMeta || {};
+  state.syncMeta[slot] = at;
+  try { SyncAdapter.save(state); } catch (e) {}
+  enqueue({ t: 'profile', room: roomId, slot: slot, name: String(p.name || '').slice(0, 8), avatar: p.emoji, updated_at: at });
+}
+function pushProfileSoon(slot) {
+  if (slot == null || slot < 0) return;
+  clearTimeout(profilePushTimer);
+  profilePushTimer = setTimeout(function () { pushProfile(slot); }, 700);
+}
+function pushStampFor(pid, sid) {
+  const slot = state.profiles.findIndex(p => p.id === pid);
+  if (slot < 0) return;
+  enqueue({ t: 'stamp', room: roomId, slot: slot, date_kst: todayKey(), subject: sid, earned_at: new Date().toISOString() });
+}
+function pushTodayStamps(slot) {
+  const p = state.profiles[slot]; if (!p) return;
+  const day = todayKey();
+  const rec = (state.progress[p.id] || {})[day];
+  if (!rec) return;
+  Object.keys(rec).forEach(function (sid) {
+    const s = rec[sid] || {};
+    const n = Object.keys(s.q || {}).length + Object.keys(s.s || {}).length;
+    if (n > 0) enqueue({ t: 'stamp', room: roomId, slot: slot, date_kst: day, subject: sid, earned_at: new Date().toISOString() });
+  });
+}
+
+/* ── 당겨오기(merge) ── */
+function tsKey(s) { return String(s || '').slice(0, 19); }
+function loadRemote() {
+  try {
+    const raw = localStorage.getItem(REMOTE_STORE);
+    const v = raw ? JSON.parse(raw) : null;
+    if (v && typeof v === 'object') remoteStamps = v;
+  } catch (e) { remoteStamps = {}; }
+}
+function saveRemote() {
+  try { localStorage.setItem(REMOTE_STORE, JSON.stringify(remoteStamps)); } catch (e) {}
+}
+function applyProfiles(rows) {
+  let changed = false;
+  state.syncMeta = state.syncMeta || {};
+  (rows || []).forEach(function (r) {
+    const i = Number(r.slot);
+    if (!(i >= 0 && i < 5)) return;
+    const p = state.profiles[i]; if (!p) return;
+    const at = tsKey(r.updated_at);
+    if (tsKey(state.syncMeta[i] || '') > at) return;   // 이 폰에서 더 최근에 고친 이름
+    const nm = String(r.name || '').slice(0, 8);
+    if (nm && nm !== p.name) { p.name = nm; changed = true; }
+    if (r.avatar && r.avatar !== p.emoji) { p.emoji = r.avatar; changed = true; }
+    if (at) state.syncMeta[i] = at;
+  });
+  return changed;
+}
+function applyStamps(rows) {
+  const next = {};
+  (rows || []).forEach(function (r) {
+    const i = Number(r.slot);
+    if (!(i >= 0 && i < 5)) return;
+    const p = state.profiles[i]; if (!p) return;
+    const d = String(r.date_kst || '').slice(0, 10);
+    if (!d) return;
+    const byDay = next[p.id] || (next[p.id] = {});
+    const sub = byDay[d] || (byDay[d] = {});
+    sub[String(r.subject)] = 1;
+  });
+  const before = JSON.stringify(remoteStamps);
+  remoteStamps = next;
+  const changed = before !== JSON.stringify(next);
+  if (changed) saveRemote();
+  return changed;
+}
+function setSyncStatus(s, msg) {
+  if (msg) syncError = msg;
+  if (syncStatus === s) return;
+  syncStatus = s;
+  if (view === 'board') renderBoard();
+  else if (view === 'settings') renderSettings();
+}
+function refreshFromSync() {
+  try { renderFriendStrip(); renderTopbar(); } catch (e) {}
+  if (view === 'board') renderBoard();
+  else if (view === 'home') renderHome();
+  else if (view === 'study') renderStudy();
+}
+async function ensureTables() {
+  if (tablesReady) return true;
+  if (Date.now() - specCheckedAt < 30000) return false;
+  specCheckedAt = Date.now();
+  const spec = await sbReq('/rest/v1/');
+  const defs = (spec && spec.definitions) || {};
+  tablesReady = !!(defs.kids_study_profiles && defs.kids_study_stamps);
+  return tablesReady;
+}
+async function syncPull(reason) {
+  if (pulling) return;
+  if (!navigator.onLine && reason !== 'force') { setSyncStatus('off', '오프라인'); return; }
+  pulling = true;
+  try {
+    if (!(await ensureTables())) { setSyncStatus('pending'); return; }
+    const q = '?room_id=eq.' + encodeURIComponent(roomId);
+    const profs = await sbReq('/rest/v1/kids_study_profiles' + q + '&select=slot,name,avatar,updated_at');
+    const back = new Date(refNow().getTime() - 14 * 86400000);
+    const since = todayKey(back);
+    const stamps = await sbReq('/rest/v1/kids_study_stamps' + q + '&date_kst=gte.' + since + '&select=slot,date_kst,subject');
+    const pa = applyProfiles(profs);
+    const sa = applyStamps(stamps);
+    lastSyncAt = Date.now();
+    syncError = '';
+    setSyncStatus('ok');
+    if (pa || sa) refreshFromSync();
+    // 이 폰에 이미 있는 실제 기록을 방에 한 번 올려 둔다(첫 동기화 때만)
+    if (!syncSeedDone) {
+      syncSeedDone = true;
+      const i = activeSlotIndex();
+      const known = (profs || []).some(function (r) { return Number(r.slot) === i; });
+      if (!known && i >= 0 && !isPlaceholderName(state.profiles[i].name)) pushProfile(i);
+      pushTodayStamps(i);
+    }
+    flushQueue();
+  } catch (e) {
+    syncError = String((e && e.message) || e);
+    setSyncStatus('off');
+  } finally { pulling = false; }
+}
+function syncDeleteToday() {
+  state.profiles.forEach(function (p, i) { enqueue({ t: 'del-stamp-day', room: roomId, slot: i, date_kst: todayKey() }); });
+  remoteStamps = {}; saveRemote();
+}
+function syncDeleteAll() {
+  state.profiles.forEach(function (p, i) { enqueue({ t: 'del-stamps', room: roomId, slot: i }); });
+  remoteStamps = {}; saveRemote();
+}
+function syncStart() {
+  loadRemote();
+  loadQueue();
+  syncPull('init');
+  if (syncTimer) clearInterval(syncTimer);
+  syncTimer = setInterval(function () { if (!document.hidden) syncPull('timer'); }, SYNC_MS);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) syncPull('visible'); });
+  window.addEventListener('focus', function () { syncPull('focus'); });
+  window.addEventListener('online', function () { syncPull('online'); flushQueue(); });
+  window.addEventListener('offline', function () { setSyncStatus('off', '오프라인'); });
+}
+function syncLine() {
+  if (syncStatus === 'ok') return '친구들 폰과 실시간으로 이어져 있어요. 이름·도장이 서로 바로 보여요.';
+  if (syncStatus === 'off') return '지금은 인터넷이 없어 이 폰에만 저장 중이에요. 연결되면 자동으로 올라가요.';
+  if (syncStatus === 'pending') return '친구들 폰과 연결할 준비 중이에요. 준비되면 저절로 이어져요.';
+  return '친구들 폰과 연결하는 중이에요…';
+}
+
 /* ─────────────────────────── 3. 상태 ─────────────────────────── */
 
 let state = {
   profiles: DEFAULT_PROFILES.map(p => ({ ...p })),
   activeId: 'p1',
   progress: {},        // { [pid]: { 'YYYY-MM-DD': { [sid]: { q:{idx:1}, s:{idx:1} } } } }
-  settings: { rate: 1.0 }
+  settings: { rate: 1.0 },
+  syncMeta: {}         // { [slot]: 'YYYY-MM-DDTHH:MM:SS' } 내가 마지막으로 고친 시각
 };
 
 /* 하루 계산은 기기 시간대와 상관없이 한국시간(KST) 기준으로 고정한다. */
@@ -769,7 +1074,9 @@ function ensureSub(pid, sid, day) {
 }
 function quizCount(pid, sid, day = todayKey()) {
   const s = subRec(pid, sid, day);
-  return s && s.q ? Object.keys(s.q).length : 0;
+  const local = s && s.q ? Object.keys(s.q).length : 0;
+  const r = (remoteStamps[pid] && remoteStamps[pid][day] && remoteStamps[pid][day][sid]) ? 1 : 0;
+  return Math.max(local, r);   // 같은 도장을 두 번 세지 않게 큰 쪽만
 }
 function speakCount(pid, sid, day = todayKey()) {
   const s = subRec(pid, sid, day);
@@ -782,9 +1089,12 @@ function dayQuizStamps(pid, day = todayKey()) {
   return SUBJECTS.reduce((n, sub) => n + quizCount(pid, sub.id, day), 0);
 }
 function totalStamps(pid) {
-  const p = state.progress[pid]; if (!p) return 0;
+  const p = state.progress[pid] || {};
+  const days = Object.keys(p);
+  const r = remoteStamps[pid] || {};
+  Object.keys(r).forEach(d => { if (days.indexOf(d) < 0) days.push(d); });
   let n = 0;
-  for (const day of Object.keys(p)) n += dayStamps(pid, day);
+  days.forEach(d => { n += dayStamps(pid, d); });
   return n;
 }
 function hasStudiedToday(pid) { return dayStamps(pid) > 0; }
@@ -792,12 +1102,12 @@ function hasStudiedToday(pid) { return dayStamps(pid) > 0; }
 function awardQuiz(sid, qi) {
   const s = ensureSub(state.activeId, sid, todayKey());
   if (s.q[qi]) return false;
-  s.q[qi] = 1; persist(); return true;
+  s.q[qi] = 1; persist(); pushStampFor(state.activeId, sid); return true;
 }
 function awardSpeak(sid, si) {
   const s = ensureSub(state.activeId, sid, todayKey());
   if (s.s[si]) return false;
-  s.s[si] = 1; persist(); return true;
+  s.s[si] = 1; persist(); pushStampFor(state.activeId, sid); return true;
 }
 
 /* ─────────────────────────── 4. 화면 상태 ─────────────────────────── */
@@ -1263,8 +1573,13 @@ function renderBoard() {
     '</div>' +
     rows +
     '<button class="btn-primary" data-action="copy-board">📋 엄마들 단톡방에 오늘 현황 복사</button>' +
-    '<p class="note">친구들 폰과 실시간으로 나누는 기능은 다음 단계에서 붙일 수 있게 ' +
-      'SyncAdapter로 분리해 두었어요. 지금은 이 폰에만 기록돼요.</p>';
+    '<p class="note">' + (syncStatus === 'ok'
+      ? '🔗 친구들 폰과 실시간으로 나눠요 · 방 ' + esc(roomId)
+      : (syncStatus === 'off'
+        ? '📴 오프라인 — 이 폰에만 저장 중이에요. 연결되면 자동으로 올라가요.'
+        : (syncStatus === 'pending'
+          ? '📴 이 폰에만 먼저 저장 중이에요. 친구들 폰과 연결되면 자동으로 올라가요.'
+          : '🔄 친구들 폰과 연결하는 중이에요…'))) + '</p>';
   renderTopbar();
 }
 
@@ -1381,6 +1696,14 @@ function renderSettings() {
     '</div>' +
 
     '<div class="set-card">' +
+      '<h3>🔗 친구들 폰과 실시간 공유</h3>' +
+      '<p class="hint">' + syncLine() + '</p>' +
+      '<p class="hint" style="margin-top:2px">방 코드 <b>' + esc(roomId) + '</b> · ' +
+        (syncStatus === 'ok' ? '🟢 연결됨' : (syncStatus === 'off' ? '🟠 오프라인' : (syncStatus === 'pending' ? '🟡 이 폰에만' : '⚪ 연결 중'))) + '</p>' +
+      '<button class="btn-ghost" data-action="sync-now">지금 새로고침</button>' +
+    '</div>' +
+
+    '<div class="set-card">' +
       '<h3>👋 친구 초대</h3>' +
       '<p class="hint">초대 링크를 단톡방에 보내면, 친구가 이름과 동물을 고르고 자기 자리로 들어와요.</p>' +
       '<button class="btn-primary" data-action="invite-open" style="margin-top:4px;padding:13px">🔗 초대 링크 만들기</button>' +
@@ -1388,13 +1711,13 @@ function renderSettings() {
 
     '<div class="set-card">' +
       '<h3>🧹 기록 지우기</h3>' +
-      '<p class="hint">도장 기록은 이 폰에만 있어요. 지우면 되돌릴 수 없어요.</p>' +
+      '<p class="hint">도장 기록을 지우면 되돌릴 수 없어요. 이 방 친구들 폰에서도 함께 지워져요.</p>' +
       '<button class="btn-ghost" data-action="reset-today">오늘 기록만 지우기</button>' +
       '<button class="btn-ghost" data-action="reset-all" style="color:#C4511E;border-color:#FFD9C7">전체 기록 초기화</button>' +
     '</div>' +
 
-    '<div class="about">🦁 우리 반 공부방 v1.0<br>초1 친구 5명 공동 학습 · 수학·영어·한국사·위인·시사상식<br>' +
-      '인터넷 없이도 열려요 · 기록은 이 기기에만</div>';
+    '<div class="about">🐍 우리 반 공부방 v1.0<br>초1 친구 5명 공동 학습 · 수학·영어·한국사·위인·시사상식<br>' +
+      '인터넷 없이도 열려요 · 도장은 같은 방 친구들끼리 실시간으로 나눠요</div>';
 
   renderTopbar();
 }
@@ -1411,7 +1734,7 @@ function appBaseUrl() {
     return /^https?:/.test(u) ? u.replace(/index\.html$/, '') : '';
   } catch (e) { return ''; }
 }
-function inviteUrl(slot) { return appBaseUrl() + '?join=1&slot=' + (slot + 1); }
+function inviteUrl(slot) { return appBaseUrl() + '?join=1&slot=' + (slot + 1) + '&room=' + encodeURIComponent(roomId); }
 
 function inviteMessage(slot) {
   const p = state.profiles[slot];
@@ -1530,7 +1853,7 @@ function renderJoin() {
 
       '<button class="btn-primary" data-action="join-submit">이 이름으로 시작하기 🚀</button>' +
       '<button class="btn-ghost" data-action="join-later">이미 들어왔어요 → 그냥 볼래요</button>' +
-      '<p class="note">이름과 도장은 이 폰에만 저장돼요. 인터넷 없이도 열려요.</p>' +
+      '<p class="note">이름과 도장은 <b>' + esc(roomId) + '</b> 방 친구들 폰에도 함께 보여요. 이 폰에도 저장돼서 인터넷 없이도 열려요.</p>' +
     '</div>';
 
   const el = $('#joinName');
@@ -1559,6 +1882,7 @@ function joinSubmit() {
   p.emoji = joinPick;
   state.activeId = p.id;
   persist();
+  pushProfile(joinSlot);
   try { history.replaceState(null, '', location.pathname); } catch (e) {}
   welcomeName = name;
   showView('home');
@@ -2085,13 +2409,19 @@ document.addEventListener('click', (e) => {
       break;
     }
 
+    case 'sync-now': {
+      syncPull('force');
+      toast('친구들 기록을 새로 받아왔어요');
+      break;
+    }
+
     case 'reset-today': {
       if (!window.confirm('오늘 기록한 도장을 모두 지울까요? 되돌릴 수 없어요.')) break;
       state.profiles.forEach(p => {
         const d = dayRec(p.id, todayKey());
         if (d) delete state.progress[p.id][todayKey()];
       });
-      persist(); refreshCurrent();
+      persist(); syncDeleteToday(); refreshCurrent();
       toast('오늘 기록을 지웠어요');
       break;
     }
@@ -2099,7 +2429,7 @@ document.addEventListener('click', (e) => {
     case 'reset-all': {
       if (!window.confirm('모든 기록을 지울까요? 이름 설정은 그대로 두고 도장 기록만 지워요.')) break;
       state.progress = {};
-      persist(); refreshCurrent();
+      persist(); syncDeleteAll(); refreshCurrent();
       toast('전체 기록을 지웠어요');
       break;
     }
@@ -2113,6 +2443,7 @@ document.addEventListener('input', (e) => {
   if (!p) return;
   p.name = el.value.trim() || '친구';
   persist();
+  pushProfileSoon(state.profiles.findIndex(x => x.id === el.dataset.id));
   renderFriendStrip();
 });
 
@@ -2123,6 +2454,7 @@ document.addEventListener('change', (e) => {
   if (!p) return;
   p.emoji = el.value;
   persist();
+  pushProfile(state.profiles.findIndex(x => x.id === el.dataset.id));
   renderSettings();
   renderFriendStrip();
 });
@@ -2153,11 +2485,13 @@ function mergeLoaded(loaded) {
   if (loaded.settings && typeof loaded.settings === 'object') {
     state.settings.rate = loaded.settings.rate === 0.8 ? 0.8 : 1;
   }
+  if (loaded.syncMeta && typeof loaded.syncMeta === 'object') state.syncMeta = loaded.syncMeta;
 }
 
 async function init() {
   const m = /[?&]d=(\d{4}-\d{2}-\d{2})/.exec(location.search);
   if (m) DAY_OVERRIDE = m[1];
+  roomId = readRoom();
 
   const loaded = await SyncAdapter.load();
   mergeLoaded(loaded);
@@ -2178,10 +2512,8 @@ async function init() {
   if (/[?&]join=1/.test(location.search)) startJoin();
   else showView('home');
 
-  // 다른 폰의 변경을 받는 자리 (지금 어댑터는 no-op)
-  SyncAdapter.subscribe(() => {
-    SyncAdapter.load().then(l => { mergeLoaded(l); refreshCurrent(); });
-  });
+  // 친구들 폰과 실시간 공유 시작 (4초 폴링 + 화면 복귀·온라인 시 즉시)
+  syncStart();
 }
 
 window.__kids = {
@@ -2192,6 +2524,8 @@ window.__kids = {
   },
   day: function () { return { dayNumber: dayNumber(), key: todayKey(), label: dateLabel(), idx: SUBJECTS.map(function (s) { return s.id + ':' + dailyIndex(s); }) }; },
   invite: function (slot) { return inviteMessage(slot); },
+  sync: function () { return { room: roomId, status: syncStatus, error: syncError, queue: syncQueue.length, lastSyncAt: lastSyncAt, remote: remoteStamps }; },
+  syncNow: function () { return syncPull('force'); },
   state: function () { return { activeId: state.activeId, profiles: state.profiles, errs: window.__errs }; }
 };
 
