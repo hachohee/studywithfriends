@@ -40,9 +40,11 @@ def main():
     html = open(HTML).read()
     new = re.sub(r'/\*__BANKS_START__\*/.*?/\*__BANKS_END__\*/',
                  '/*__BANKS_START__*/\n' + body + '\n/*__BANKS_END__*/', html, flags=re.S)
-    if new == html:
+    if '/*__BANKS_START__*/' not in html or '/*__BANKS_END__*/' not in html:
         print('!! BANKS 마커를 찾지 못했습니다.', file=sys.stderr)
         sys.exit(1)
+    if new == html:
+        print('(이미 최신)')
     open(HTML, 'w').write(new)
     print('subject pools:', {k: len(v) for k, v in banks.items()}, 'total', sum(len(v) for v in banks.values()))
 
