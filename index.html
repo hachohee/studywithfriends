@@ -1,0 +1,1753 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FF8A5B">
+<meta name="description" content="초1 친구 5명이 함께 쓰는 공동 학습 웹앱 — 수학·영어·한국사·위인·시사상식">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="우리 반 공부방">
+<title>우리 반 공부방 · 초1 공동학습</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23FF8A5B'/%3E%3Cpath d='M32 13l5.9 11.9 13.1 1.9-9.5 9.2 2.2 13.1L32 42.9 19.3 49.1l2.2-13.1-9.5-9.2 13.1-1.9z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  *,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  :root{
+    --bg:#FFF7EF; --ink:#2B2340; --muted:#7C7590; --line:#F0E6DA;
+    --card:#FFFFFF; --brand:#FF7A45; --brand2:#FF5E86;
+    --ok:#1FA97A; --ok-soft:#E4F7EF; --warn:#EF9A1E;
+    --shadow:0 8px 22px rgba(94,66,48,.09), 0 1px 3px rgba(94,66,48,.06);
+    --shadow-sm:0 2px 8px rgba(94,66,48,.07);
+    --r:20px;
+  }
+  html{-webkit-text-size-adjust:100%}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Pretendard","Pretendard Variable","Apple SD Gothic Neo","Noto Sans KR",system-ui,-apple-system,"Malgun Gothic",sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(110% 46% at 50% -8%, #FFE3C9 0%, rgba(255,227,201,0) 62%),
+      radial-gradient(80% 40% at 100% 4%, #FFE9F0 0%, rgba(255,233,240,0) 60%),
+      linear-gradient(180deg,#FFF9F3 0%, #FDF1E6 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+    font-size:16px; line-height:1.5;
+    letter-spacing:-.01em;
+  }
+  [hidden]{display:none !important}
+  button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+  button:active{transform:scale(.97)}
+  input,select{font:inherit;color:inherit}
+  .app{
+    max-width:430px; margin:0 auto; min-height:100vh; position:relative;
+    padding-bottom:calc(78px + env(safe-area-inset-bottom));
+  }
+
+  /* ── top bar ── */
+  .topbar{
+    position:sticky; top:0; z-index:30;
+    display:flex; align-items:center; gap:10px;
+    padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+    background:rgba(255,249,243,.86);
+    backdrop-filter:saturate(1.4) blur(14px);
+    -webkit-backdrop-filter:saturate(1.4) blur(14px);
+    border-bottom:1px solid rgba(240,230,218,.75);
+  }
+  .brand{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
+  .brand-emoji{
+    width:38px;height:38px;border-radius:13px;display:grid;place-items:center;font-size:21px;
+    background:linear-gradient(135deg,#FFB26B,#FF7A45);box-shadow:0 4px 10px rgba(255,122,69,.3);
+  }
+  .brand-text{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+  .brand-text b{font-size:16.5px;letter-spacing:-.03em}
+  .brand-text small{font-size:11px;color:var(--muted);font-weight:600}
+  .stamp-pill{
+    display:flex;align-items:center;gap:5px;padding:8px 13px;border-radius:999px;
+    background:#fff;box-shadow:var(--shadow-sm);font-size:14px;font-weight:800;color:#B4631B;
+    border:1px solid #FBE7D6;
+  }
+  .stamp-pill b{font-size:15px}
+
+  /* ── friend strip ── */
+  .friendstrip{
+    display:flex;gap:8px;overflow-x:auto;padding:12px 16px 4px;
+    scrollbar-width:none;-ms-overflow-style:none;
+  }
+  .friendstrip::-webkit-scrollbar{display:none}
+  .friend{
+    flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:5px;
+    width:62px;padding:8px 4px 7px;border-radius:18px;background:#fff;
+    border:1.5px solid #F4EADF;box-shadow:var(--shadow-sm);position:relative;
+    transition:border-color .15s, transform .15s;
+  }
+  .friend:active{transform:scale(.96)}
+  .friend .friend-ava{font-size:24px;line-height:1.1}
+  .friend .friend-name{
+    font-size:11.5px;font-weight:700;color:#5C5470;max-width:100%;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .friend.on{border-color:var(--brand);background:linear-gradient(180deg,#FFF4EC,#FFFFFF);box-shadow:0 6px 14px rgba(255,122,69,.18)}
+  .friend.on .friend-name{color:#C4511E}
+  .friend .friend-dot{
+    position:absolute;top:6px;right:7px;width:9px;height:9px;border-radius:50%;
+    background:#E4DED4;
+  }
+  .friend .friend-dot.on{background:var(--ok);box-shadow:0 0 0 2px #fff inset}
+  .strip-hint{font-size:11.5px;color:var(--muted);padding:0 18px 2px;font-weight:600}
+
+  /* ── layout ── */
+  main{padding:10px 16px 8px}
+  .view{animation:fade .22s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.page-title{font-size:20px;margin:6px 0 4px;letter-spacing:-.035em}
+  .page-sub{font-size:12.5px;color:var(--muted);margin:0 0 14px;font-weight:600}
+  .card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;border:1px solid #F7EEE4}
+
+  /* ── home ── */
+  .hero{
+    position:relative;overflow:hidden;border-radius:26px;padding:20px 18px;
+    background:linear-gradient(135deg,#FF9C63 0%,#FF7A45 45%,#FF6B8A 100%);
+    color:#fff;box-shadow:0 14px 26px rgba(255,122,69,.28);
+  }
+  .hero::after{
+    content:"";position:absolute;right:-30px;top:-40px;width:150px;height:150px;border-radius:50%;
+    background:rgba(255,255,255,.18);
+  }
+  .hero-top{display:flex;align-items:center;justify-content:space-between;gap:8px;position:relative}
+  .hero-date{font-size:12px;font-weight:700;opacity:.95;background:rgba(255,255,255,.22);padding:5px 11px;border-radius:999px}
+  .hero-hi{font-size:19px;font-weight:800;margin:12px 0 2px;letter-spacing:-.03em;position:relative}
+  .hero-sub{font-size:12.5px;opacity:.94;font-weight:600;position:relative}
+  .hero-stats{display:flex;gap:8px;margin-top:14px;position:relative;flex-wrap:wrap}
+  .hero-stat{background:rgba(255,255,255,.9);color:#B0441A;border-radius:14px;padding:7px 12px;font-size:12.5px;font-weight:800}
+  .hero-stat em{font-style:normal;font-size:15px;margin-right:2px}
+
+  .sec-head{display:flex;align-items:baseline;justify-content:space-between;margin:20px 2px 9px}
+  .sec-head h3{font-size:15px;margin:0;letter-spacing:-.03em}
+  .sec-head .more{font-size:12px;color:var(--brand);font-weight:800;padding:11px 8px;margin:-11px -8px -11px 0;border-radius:10px}
+
+  .enq{
+    display:flex;align-items:center;gap:12px;background:#fff;border-radius:18px;padding:12px;
+    box-shadow:var(--shadow-sm);border:1px solid #EDF1FF;
+  }
+  .enq .q-emoji{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:#EEF3FF;flex:0 0 auto}
+  .enq .q-body{flex:1;min-width:0;display:block}
+  .enq .q-en{display:block;font-size:16px;font-weight:800;color:#27407A;letter-spacing:-.01em;line-height:1.3}
+  .enq .q-ko{display:block;font-size:12.5px;color:var(--muted);font-weight:600;margin-top:2px}
+  .icon-btn{
+    width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-size:18px;
+    background:#F2F5FF;color:#3B5BC0;flex:0 0 auto;
+  }
+  .icon-btn:active{background:#E4EBFF}
+
+  .subj-grid{display:flex;flex-direction:column;gap:10px}
+  .subj{
+    display:flex;align-items:center;gap:12px;background:#fff;border-radius:20px;padding:13px 14px;
+    box-shadow:var(--shadow-sm);border:1px solid #F6EEE5;text-align:left;width:100%;
+    transition:transform .12s;
+  }
+  .subj:active{transform:scale(.985)}
+  .subj .s-ico{
+    width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-size:23px;flex:0 0 auto;
+    background:var(--soft);
+  }
+  .subj .s-body{flex:1;min-width:0}
+  .subj .s-name{font-size:15.5px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:5px}
+  .subj .s-line{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:2px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+  .subj .s-right{text-align:right;flex:0 0 auto}
+  .dots{display:flex;gap:3px;justify-content:flex-end}
+  .dots i{width:8px;height:8px;border-radius:50%;background:#EDE6DC;display:block}
+  .dots i.on{background:var(--dotcolor,#FF7A45)}
+  .s-count{font-size:10.5px;font-weight:700;color:var(--muted);margin-top:4px}
+
+  /* ── subject detail ── */
+  .detail-head{background:#fff;border-radius:22px;padding:16px;box-shadow:var(--shadow-sm);border:1px solid #F6EEE5;display:flex;align-items:center;gap:12px}
+  .detail-head .d-ico{width:52px;height:52px;border-radius:17px;display:grid;place-items:center;font-size:27px;background:var(--soft)}
+  .detail-head h2{font-size:18px;margin:0;letter-spacing:-.03em}
+  .detail-head p{margin:3px 0 0;font-size:12px;color:var(--muted);font-weight:600;line-height:1.4}
+  .back-btn{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:18px;background:#F6F1EA;margin-bottom:12px}
+  .seg2{display:flex;gap:6px;background:#F4EDE5;border-radius:15px;padding:4px;margin:14px 0 4px}
+  .seg2 button{flex:1;padding:9px 0;border-radius:12px;font-size:13.5px;font-weight:800;color:#8A8199}
+  .seg2 button.on{background:#fff;color:var(--ink);box-shadow:0 2px 6px rgba(94,66,48,.1)}
+
+  .keyline{
+    margin-top:12px;padding:14px 16px;border-radius:18px;font-size:14px;font-weight:800;line-height:1.45;
+    background:var(--soft);color:var(--deep);border:1px dashed var(--line2);
+  }
+  .keyline .k-label{display:block;font-size:10.5px;letter-spacing:.04em;font-weight:800;opacity:.65;margin-bottom:4px}
+
+  .story{display:flex;gap:11px;background:#fff;border-radius:18px;padding:13px;box-shadow:var(--shadow-sm);border:1px solid #F6EEE5;margin-top:10px}
+  .story .st-e{font-size:22px;line-height:1.2}
+  .story .st-t{font-size:13.5px;font-weight:800;margin-bottom:3px}
+  .story .st-d{font-size:12.5px;color:#5E566F;line-height:1.5;font-weight:500}
+
+  .yt-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .yt{
+    display:flex;align-items:center;gap:10px;background:#fff;border-radius:16px;padding:11px 13px;
+    box-shadow:var(--shadow-sm);border:1px solid #F6EEE5;text-decoration:none;color:var(--ink);
+  }
+  .yt .yt-ico{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:#FFEDEC;font-size:15px;flex:0 0 auto}
+  .yt.site .yt-ico{background:#E8F4FF}
+  .yt .yt-t{flex:1;font-size:13px;font-weight:700;line-height:1.35}
+  .yt .yt-d{display:block;font-size:10.5px;font-weight:600;color:#9A9184;margin-top:1px}
+  .yt .yt-go{color:#C9BFB2;font-size:14px}
+
+  /* ── english ── */
+  .eng-ctrl{background:#fff;border-radius:18px;padding:12px;box-shadow:var(--shadow-sm);border:1px solid #EDF1FF;margin-top:10px}
+  .seg-rate{display:flex;gap:6px;background:#F1F4FC;border-radius:12px;padding:4px}
+  .seg-rate button{flex:1;padding:8px 0;border-radius:9px;font-size:12.5px;font-weight:800;color:#6C7896}
+  .seg-rate button.on{background:#fff;color:#2A4694;box-shadow:0 1px 4px rgba(42,70,148,.14)}
+  .play-row{display:flex;gap:6px;margin-top:8px}
+  .play-row button{
+    flex:1;padding:9px 4px;border-radius:11px;font-size:11.5px;font-weight:800;
+    background:#F7F9FF;color:#3B5BC0;border:1px solid #E7EDFF;line-height:1.2;
+  }
+  .play-row button.stop{flex:0 0 46px;background:#FFF4F1;color:#C4511E;border-color:#FFE2D7}
+  .step-chips{display:flex;gap:6px;overflow-x:auto;padding:12px 0 2px;scrollbar-width:none}
+  .step-chips::-webkit-scrollbar{display:none}
+  .step-chips button{
+    flex:0 0 auto;padding:8px 13px;border-radius:999px;font-size:12px;font-weight:800;
+    background:#fff;color:#7A7390;border:1.5px solid #EFE7DC;
+  }
+  .step-chips button.on{background:#2A4694;color:#fff;border-color:#2A4694;box-shadow:0 4px 10px rgba(42,70,148,.22)}
+  .step-title{font-size:12px;font-weight:800;color:#6C7896;margin:14px 2px 6px;letter-spacing:.01em}
+
+  .sent{
+    background:#fff;border-radius:18px;padding:13px 14px;box-shadow:var(--shadow-sm);
+    border:1px solid #EDF1FF;margin-bottom:9px;transition:box-shadow .2s,border-color .2s;
+  }
+  .sent.playing{border-color:#4C7DF0;box-shadow:0 0 0 3px rgba(76,125,240,.16), 0 8px 18px rgba(76,125,240,.14)}
+  .sent.done{border-color:#BFE9D6;background:linear-gradient(180deg,#F7FDFA,#fff)}
+  .sent-head{display:flex;align-items:flex-start;gap:9px}
+  .sent-e{font-size:20px;line-height:1.3}
+  .sent-main{flex:1;min-width:0}
+  .sent-en{font-size:16.5px;font-weight:800;color:#1E3A78;letter-spacing:-.01em;line-height:1.3}
+  .sent-ko{font-size:12.5px;color:#66607A;font-weight:600;margin-top:2px}
+  .sent-tip{font-size:11.5px;color:#8B93AF;font-weight:600;margin-top:5px;background:#F6F8FF;border-radius:9px;padding:5px 8px;display:inline-block}
+  .sent-btns{display:flex;gap:6px;margin-top:10px}
+  .sent-btns button{
+    flex:1;padding:9px 0;border-radius:12px;font-size:12.5px;font-weight:800;
+    background:#EEF3FF;color:#2F55BE;
+  }
+  .sent-btns button.mic{background:#FFF1F4;color:#C2334F}
+  .sent-btns button:disabled{opacity:.5}
+  .sent-stamp{font-size:11px;font-weight:800;color:var(--ok);margin-top:8px;display:none}
+  .sent.done .sent-stamp{display:block}
+
+  .practice{
+    margin-top:10px;border-radius:14px;background:#FFF7FA;border:1px dashed #FFD3DE;padding:12px;
+  }
+  .practice .p-t{font-size:12.5px;font-weight:800;color:#B0314B;margin-bottom:6px}
+  .practice .p-d{font-size:11.5px;color:#8A6A75;font-weight:600;line-height:1.45}
+  .practice .live{
+    margin-top:8px;font-size:13px;font-weight:700;color:#3A3050;background:#fff;border-radius:10px;
+    padding:8px 10px;min-height:36px;border:1px solid #FFE3EA;
+  }
+  .practice .p-btns{display:flex;gap:6px;margin-top:9px}
+  .practice .p-btns button{
+    flex:1;padding:9px 0;border-radius:11px;font-size:12px;font-weight:800;background:#fff;color:#B0314B;border:1px solid #FFD3DE;
+  }
+  .practice .p-btns button.primary{background:#FF6B8A;color:#fff;border-color:#FF6B8A}
+  .countdown{font-size:34px;font-weight:900;color:#FF6B8A;text-align:center;line-height:1.1;letter-spacing:-.02em}
+  .countdown small{display:block;font-size:11px;color:#A08E96;font-weight:700;margin-top:2px;letter-spacing:0}
+
+  /* ── quiz ── */
+  .quiz-top{display:flex;align-items:center;justify-content:space-between;margin:14px 2px 8px}
+  .quiz-dots{display:flex;gap:5px}
+  .quiz-dots i{width:26px;height:6px;border-radius:99px;background:#EDE6DC;display:block;transition:background .2s}
+  .quiz-dots i.now{background:#FFB08A}
+  .quiz-dots i.ok{background:var(--ok)}
+  .quiz-dots i.no{background:#E58AA0}
+  .quiz-pill{font-size:11.5px;font-weight:800;color:#B4631B;background:#FFF1E6;padding:5px 10px;border-radius:999px}
+  .qcard{background:#fff;border-radius:22px;padding:18px 16px 16px;box-shadow:var(--shadow);border:1px solid #F7EEE4}
+  .qnum{font-size:11.5px;font-weight:800;color:#B7AFA2;letter-spacing:.08em}
+  .qtext{font-size:17px;font-weight:800;line-height:1.45;margin:8px 0 16px;letter-spacing:-.02em}
+  .opts{display:flex;flex-direction:column;gap:9px}
+  .opt{
+    display:flex;align-items:center;gap:10px;padding:13px 14px;border-radius:15px;background:#FAF6F1;
+    border:2px solid transparent;font-size:14.5px;font-weight:700;text-align:left;line-height:1.35;color:#3C3450;
+  }
+  .opt .num{
+    width:22px;height:22px;border-radius:50%;background:#fff;color:#9A9184;font-size:11px;font-weight:900;
+    display:grid;place-items:center;flex:0 0 auto;border:1.5px solid #E9E0D4;
+  }
+  .opt.pick{border-color:#B9C6E8;background:#F6F8FF}
+  .opt.right{border-color:var(--ok);background:var(--ok-soft);color:#0F6B4C}
+  .opt.right .num{background:var(--ok);color:#fff;border-color:var(--ok)}
+  .opt.wrong{border-color:#EEA3B3;background:#FFF3F6;color:#A62B49}
+  .opt.wrong .num{background:#E5647F;color:#fff;border-color:#E5647F}
+  .feedback{margin-top:14px;border-radius:16px;padding:13px 14px;font-size:13px;font-weight:700;line-height:1.5}
+  .feedback.ok{background:var(--ok-soft);color:#0F6B4C}
+  .feedback.no{background:#FFF4F0;color:#9C4A22}
+  .feedback .fb-t{display:block;font-size:14.5px;font-weight:900;margin-bottom:3px}
+  .btn-primary{
+    width:100%;margin-top:14px;padding:15px;border-radius:16px;font-size:15px;font-weight:900;color:#fff;
+    background:linear-gradient(135deg,#FF9A63,#FF6B8A);box-shadow:0 8px 18px rgba(255,107,138,.28);
+  }
+  .btn-ghost{
+    width:100%;margin-top:9px;padding:13px;border-radius:15px;font-size:13.5px;font-weight:800;
+    background:#fff;border:1.5px solid #F0E6DA;color:#6B6379;
+  }
+  .result{text-align:center;padding:6px 4px 2px}
+  .result .big{font-size:54px;line-height:1.1}
+  .result h3{font-size:20px;margin:8px 0 4px;letter-spacing:-.03em}
+  .result p{font-size:13px;color:var(--muted);font-weight:600;margin:0 0 6px}
+  .result .stamps{font-size:26px;letter-spacing:3px;margin:8px 0}
+
+  /* ── board ── */
+  .board-sum{display:flex;gap:8px;margin-top:12px}
+  .board-sum div{flex:1;background:#fff;border-radius:16px;padding:11px 12px;box-shadow:var(--shadow-sm);border:1px solid #F4ECE2;text-align:center}
+  .board-sum b{display:block;font-size:19px;letter-spacing:-.02em}
+  .board-sum span{font-size:11px;color:var(--muted);font-weight:700}
+  .kid{
+    display:flex;align-items:center;gap:11px;background:#fff;border-radius:18px;padding:12px 13px;
+    box-shadow:var(--shadow-sm);border:1.5px solid #F4ECE2;margin-top:9px;
+  }
+  .kid.me{border-color:#FFC9AE;background:linear-gradient(180deg,#FFF8F3,#fff)}
+  .kid .k-ava{
+    width:44px;height:44px;border-radius:15px;display:grid;place-items:center;font-size:23px;background:#F8F2E9;flex:0 0 auto;
+    position:relative;
+  }
+  .kid.ok .k-ava{background:var(--ok-soft)}
+  .kid .k-body{flex:1;min-width:0}
+  .kid .k-name{font-size:14.5px;font-weight:800;display:flex;align-items:center;gap:5px;letter-spacing:-.02em}
+  .kid .k-name .me-tag{font-size:9.5px;font-weight:800;color:#fff;background:#FF9A63;padding:2px 6px;border-radius:99px}
+  .kid .k-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
+  .k-badge{font-size:10px;font-weight:800;padding:2.5px 7px;border-radius:99px;background:#F6F1EA;color:#8A8199}
+  .k-badge.b0{background:#FFEDE3;color:#B4551F}
+  .k-badge.b1{background:#E8EFFF;color:#2F55BE}
+  .k-badge.b2{background:#F3E9FF;color:#7A3FC0}
+  .k-badge.b3{background:#FFF4D6;color:#966B00}
+  .k-badge.b4{background:#E2F8F1;color:#0E7D5C}
+  .kid .k-status{
+    font-size:11.5px;font-weight:900;padding:7px 10px;border-radius:12px;flex:0 0 auto;text-align:center;line-height:1.2;
+  }
+  .kid.ok .k-status{background:var(--ok-soft);color:#0F6B4C}
+  .kid .k-status.todo{background:#F7F2EA;color:#A79C8C}
+  .note{font-size:11px;color:#A79C8C;font-weight:600;line-height:1.5;margin:12px 2px 0}
+
+  /* ── settings ── */
+  .set-card{background:#fff;border-radius:20px;padding:15px;box-shadow:var(--shadow-sm);border:1px solid #F6EEE5;margin-bottom:12px}
+  .set-card h3{font-size:14.5px;margin:0 0 4px;letter-spacing:-.02em}
+  .set-card .hint{font-size:11.5px;color:var(--muted);font-weight:600;margin:0 0 12px;line-height:1.45}
+  .prow{display:flex;align-items:center;gap:9px;padding:8px 0;border-top:1px solid #F6EFE7}
+  .prow:first-of-type{border-top:0}
+  .prow .p-ava{font-size:22px;width:34px;text-align:center;flex:0 0 auto}
+  .prow select{
+    width:52px;padding:7px 2px;border-radius:10px;border:1.5px solid #EFE6DA;background:#FDFAF6;font-size:16px;text-align:center;
+    appearance:none;-webkit-appearance:none;flex:0 0 auto;
+  }
+  .prow input{
+    flex:1;min-width:0;padding:9px 11px;border-radius:11px;border:1.5px solid #EFE6DA;background:#FDFAF6;
+    font-size:14px;font-weight:700;outline:none;
+  }
+  .prow input:focus{border-color:#FFB08A;background:#fff}
+  .about{font-size:11.5px;color:#9A9184;font-weight:600;line-height:1.6;text-align:center;padding:16px 4px 4px}
+
+  /* ── tab bar ── */
+  .tabbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:40;
+    display:flex;justify-content:center;
+    background:rgba(255,252,248,.92);
+    backdrop-filter:saturate(1.4) blur(16px);-webkit-backdrop-filter:saturate(1.4) blur(16px);
+    border-top:1px solid rgba(240,230,218,.9);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .tabbar .inner{display:flex;width:100%;max-width:430px}
+  .tabbar button{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 0 8px;
+    font-size:10.5px;font-weight:800;color:#A79C8C;position:relative;
+  }
+  .tabbar button .t-ico{font-size:20px;line-height:1;filter:grayscale(.55) opacity(.75);transition:filter .15s,transform .15s}
+  .tabbar button.on{color:#E4612A}
+  .tabbar button.on .t-ico{filter:none;transform:translateY(-1px)}
+  .tabbar button.on::after{content:"";position:absolute;top:0;width:26px;height:3px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,#FF9A63,#FF6B8A)}
+
+  /* ── toast / fx / modal ── */
+  #toast{
+    position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translate(-50%,14px);
+    background:rgba(43,35,64,.94);color:#fff;font-size:12.5px;font-weight:700;padding:11px 16px;border-radius:14px;
+    opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;z-index:60;max-width:88vw;text-align:center;line-height:1.4;
+  }
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  #fx{position:fixed;inset:0;pointer-events:none;z-index:55;overflow:hidden}
+  .fx-float{
+    position:absolute;font-size:20px;font-weight:900;color:#E4612A;
+    animation:floatUp .95s ease-out forwards;white-space:nowrap;
+  }
+  @keyframes floatUp{
+    0%{opacity:0;transform:translate(-50%,0) scale(.8)}
+    20%{opacity:1;transform:translate(-50%,-10px) scale(1.1)}
+    100%{opacity:0;transform:translate(-50%,-58px) scale(1)}
+  }
+  .modal-bg{position:fixed;inset:0;background:rgba(35,26,44,.45);z-index:70;display:flex;align-items:center;justify-content:center;padding:20px}
+  .modal{background:#fff;border-radius:20px;padding:16px;width:100%;max-width:360px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+  .modal h3{font-size:15px;margin:0 0 6px}
+  .modal p{font-size:12px;color:var(--muted);font-weight:600;margin:0 0 10px}
+  .modal textarea{width:100%;height:150px;border-radius:12px;border:1.5px solid #EFE6DA;padding:10px;font-size:11.5px;line-height:1.5;font-family:inherit;resize:none}
+  .modal .m-btns{display:flex;gap:7px;margin-top:10px}
+  .modal .m-btns button{flex:1;padding:11px;border-radius:12px;font-size:13px;font-weight:800;background:#F6F1EA;color:#6B6379}
+  .modal .m-btns button.primary{background:#FF7A45;color:#fff}
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001s !important;transition-duration:.001s !important}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-emoji">🦁</span>
+      <span class="brand-text"><b>우리 반 공부방</b><small>초1 · 5명 함께 공부</small></span>
+    </div>
+    <button class="stamp-pill" data-action="go" data-view="board" aria-label="도장판 보기">
+      <span>🏅</span><b id="topStamps">0</b>
+    </button>
+  </header>
+
+  <div class="friendstrip" id="friendStrip"></div>
+
+  <main>
+    <section class="view" data-view="home" id="view-home"></section>
+    <section class="view" data-view="study" id="view-study" hidden></section>
+    <section class="view" data-view="subject" id="view-subject" hidden></section>
+    <section class="view" data-view="board" id="view-board" hidden></section>
+    <section class="view" data-view="settings" id="view-settings" hidden></section>
+  </main>
+
+  <nav class="tabbar" aria-label="메뉴">
+    <div class="inner">
+      <button data-action="go" data-view="home" data-nav="home"><span class="t-ico">🏠</span>홈</button>
+      <button data-action="go" data-view="study" data-nav="study"><span class="t-ico">📖</span>공부</button>
+      <button data-action="go" data-view="board" data-nav="board"><span class="t-ico">🏅</span>도장판</button>
+      <button data-action="go" data-view="settings" data-nav="settings"><span class="t-ico">⚙️</span>설정</button>
+    </div>
+  </nav>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="fx"></div>
+<div id="modalWrap" hidden></div>
+
+<script>
+/* =========================================================================
+   우리 반 공부방 · 초1 5인 공동학습 웹앱 (단일 파일 · 오프라인 동작)
+   - 5과목(수학/영어/한국사/위인/시사상식) 학습 카드 + 퀴즈 3문제 + 도장
+   - 영어: 문장별 TTS(0.8x/1.0x) · 이어듣기 · 따라읽기(음성인식/3초 타이머 폴백)
+   - 5명 하루 학습 도장판 + 단톡방 복사
+   - 저장/공유는 전부 SyncAdapter 한 곳을 통해서만 (지금은 localStorage)
+   ========================================================================= */
+'use strict';
+
+/* ─────────────────────────── 1. 학습 콘텐츠 ─────────────────────────── */
+
+const yt = (q) => 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q);
+
+const ENGLISH_STEPS = [
+  {
+    id: 's1', name: 'Step 1', short: '1 인사·기분', title: '인사와 기분', hint: '만나고 헤어질 때 쓰는 말',
+    sentences: [
+      { en: 'Hello!', ko: '안녕!', tip: '헬-로우 · 끝을 살짝 올려요', emoji: '👋' },
+      { en: 'Good morning!', ko: '좋은 아침이야!', tip: '굿-모-닝 · 아침에 만나면', emoji: '🌞' },
+      { en: 'How are you?', ko: '잘 지냈어? 기분 어때?', tip: '하우-아-유 · 물음표라 끝을 올려요', emoji: '🙂' },
+      { en: 'I am happy!', ko: '나는 행복해!', tip: '아이-앰-해피 · 내 기분을 말해요', emoji: '😄' },
+      { en: 'Thank you!', ko: '고마워!', tip: '땡-큐 · th는 혀끝을 살짝 물고', emoji: '🙏' }
+    ]
+  },
+  {
+    id: 's2', name: 'Step 2', short: '2 학교·놀이', title: '학교와 놀이', hint: '친구와 놀 때 쓰는 말',
+    sentences: [
+      { en: "Let's go to school!", ko: '학교 가자!', tip: '렛츠-고-투-스쿨 · 렛츠는 "~하자"', emoji: '🎒' },
+      { en: 'This is my friend.', ko: '이건 내 친구야.', tip: '디스-이즈-마이-프렌드', emoji: '🧒' },
+      { en: 'Can I play with you?', ko: '나랑 같이 놀아도 돼?', tip: '캔-아이-플레이-위드-유', emoji: '⚽' },
+      { en: "It's so fun!", ko: '정말 재밌어!', tip: '잇츠-소-펀 · 신날 때', emoji: '🎉' },
+      { en: 'Be careful!', ko: '조심해!', tip: '비-케어-풀 · 위험할 때', emoji: '⚠️' }
+    ]
+  },
+  {
+    id: 's3', name: 'Step 3', short: '3 가족·좋아요', title: '좋아해요와 가족', hint: '좋아하는 것과 우리 가족',
+    sentences: [
+      { en: 'I like apples.', ko: '나는 사과를 좋아해.', tip: '아이-라이크-애플즈 · s는 살짝 "즈"', emoji: '🍎' },
+      { en: 'Do you like dogs?', ko: '너는 강아지 좋아해?', tip: '두-유-라이크-독즈', emoji: '🐶' },
+      { en: 'This is my mom.', ko: '이건 우리 엄마야.', tip: '디스-이즈-마이-맘', emoji: '👩' },
+      { en: 'I love my family.', ko: '나는 우리 가족을 사랑해.', tip: '아이-러브-마이-패밀리', emoji: '❤️' },
+      { en: 'Good night!', ko: '잘 자!', tip: '굿-나이트 · 밤에 헤어질 때', emoji: '🌙' }
+    ]
+  }
+];
+
+const SUBJECTS = [
+  {
+    id: 'math', name: '수학', emoji: '🔢', color: '#FF8A5B', soft: '#FFF0E7', deep: '#A9481A', dot: '#FF8A5B',
+    line: '연산 · 사고력 · 서술형을 골고루 (초2)',
+    keyline: '계산은 식으로, 생각은 그림으로! 답에는 꼭 단위를 붙여요.',
+    stories: [
+      { e: '➕', t: '연산 — 받아올림·받아내림과 곱셈구구', d: '47+28은 47+20=67, 67+8=75. 52−27은 52−20=32, 32−7=25. 곱셈구구는 "칠팔 오십육"처럼 소리 내어 외우면 오래 기억해요.' },
+      { e: '🧠', t: '사고력 — 규칙 찾기와 퍼즐', d: '규칙은 "얼마씩 커지나"부터 봐요. 2, 5, 8, 11은 3씩 커지니까 다음은 14! 도형 퍼즐은 조각을 돌리고 뒤집어 보며 맞춰요.' },
+      { e: '✏️', t: '서술형 — 문장제를 식으로', d: '문장제는 ① 구하는 것에 밑줄 ② 식으로 쓰기 ③ 답에 단위 붙이기. "32개에서 15개를 주고 9개를 더 받으면?" → 32−15+9=26(개)' }
+    ],
+    links: [
+      { label: '두 자리 수 덧셈·뺄셈 받아올림', q: '초등 2학년 두 자리 수 덧셈 뺄셈 받아올림' },
+      { label: '곱셈구구 노래로 외우기', q: '초등 2학년 곱셈구구 노래' },
+      { label: '문장제·서술형 문제 푸는 법', q: '초등 2학년 수학 문장제 서술형 문제 푸는 법' }
+    ],
+    quiz: [
+      { q: '47 + 28 = ?', opts: ['65', '75', '85'], ans: 1, why: '47에 20을 먼저 더하면 67, 거기에 8을 더하면 75예요. 일의 자리 7+8=15라서 십의 자리로 10이 올라가요(받아올림).' },
+      { q: '7 × 8 = ?', opts: ['48', '54', '56'], ans: 2, why: '"칠팔 오십육!" 7이 8번 모이면 56이에요. 7×5=35에 7×3=21을 더해도 56!' },
+      { q: '2, 5, 8, 11, □ — □에 들어갈 수는?', opts: ['12', '14', '15'], ans: 1, why: '3씩 커지는 규칙이에요. 11 다음은 11+3=14!' },
+      { q: '찬우는 구슬 32개를 가지고 있었어요. 친구에게 15개를 주고, 엄마가 9개를 더 사 주셨어요. 지금 구슬은 몇 개일까요? (식을 먼저 생각해 보세요)', opts: ['17개', '24개', '26개'], ans: 2, why: '32−15=17, 17+9=26. 식으로 쓰면 32−15+9=26(개)예요. 답에는 꼭 "개"를 붙여요.' }
+    ]
+  },
+  {
+    id: 'english', name: '영어', emoji: '🔤', color: '#4C7DF0', soft: '#EDF2FF', deep: '#274B9E', dot: '#4C7DF0',
+    line: '하루 3문장, 듣고 따라 말하기',
+    keyline: '듣고 → 따라 말하면 입이 영어를 기억해요. 하루 3문장이면 충분해요!',
+    stories: [
+      { e: '👂', t: '먼저 귀부터', d: '소리를 먼저 듣고, 입 모양을 흉내 내 보세요. 뜻은 그다음에 알면 돼요.' },
+      { e: '🐢', t: '천천히가 빠르다', d: '0.8배속으로 천천히 들은 뒤, 1.0배속으로 들으면 훨씬 잘 들려요.' },
+      { e: '🎤', t: '소리 내어 말하기', d: '작은 소리라도 꼭 입 밖으로! 말한 문장만 내 것이 돼요.' }
+    ],
+    links: [
+      { label: 'EBS 초등 영어 — 회화·파닉스', q: 'EBS 초등 영어' },
+      { label: 'EBS 키즈 영어 동요·스토리', q: 'EBS 키즈 영어' },
+      { label: 'EBSe — EBS 초등영어 무료 사이트', url: 'https://www.ebse.co.kr', d: '회화·파닉스·듣기, EBS가 무료로' },
+      { label: 'Starfall — 파닉스 놀이', url: 'https://www.starfall.com', d: '알파벳 소리 익히기 (무료)' },
+      { label: 'LearnEnglish Kids — 동화·노래', url: 'https://learnenglishkids.britishcouncil.org', d: '영국문화원 어린이 영어 (무료)' }
+    ],
+    quiz: [
+      { q: '"Hello!" 는 무슨 뜻일까요?', opts: ['안녕!', '잘 자!', '고마워!'], ans: 0, why: 'Hello는 만났을 때 하는 인사말이에요.' },
+      { q: '"I like apples." 는 무슨 뜻일까요?', opts: ['나는 사과를 좋아해', '나는 사과가 싫어', '나는 사과를 샀어'], ans: 0, why: 'like는 "좋아하다"예요. I like = 나는 좋아해.' },
+      { q: '친구에게 "같이 놀자!"라고 말하려면?', opts: ["Let's play together!", 'Good night!', 'I am hungry.'], ans: 0, why: "Let's는 \"~하자\"라는 뜻이에요." }
+    ]
+  },
+  {
+    id: 'history', name: '한국사', emoji: '🏯', color: '#A269E0', soft: '#F5ECFF', deep: '#6B32A8', dot: '#A269E0',
+    line: '옛날이야기 속에 우리 역사가 있어요',
+    keyline: '옛날이야기 속에 우리 역사가 숨어 있어요 — 단군, 세종대왕, 이순신!',
+    stories: [
+      { e: '🐻', t: '단군과 고조선', d: '옛날옛날, 단군왕검이 "고조선"이라는 나라를 세웠다는 이야기가 전해져요. 우리 역사에서 가장 오래된 나라 이야기예요. (10월 3일 개천절)' },
+      { e: '📜', t: '세종대왕과 한글', d: '세종대왕은 글을 몰라 답답해하는 백성을 보고, 누구나 쉽게 배울 수 있는 "한글"을 만들었어요. (1443년 만들고 1446년에 반포)' },
+      { e: '🐢', t: '이순신과 거북선', d: '이순신 장군은 거북 모양의 배 "거북선"을 이끌고 나라를 지켰어요. (1592년 한산도 대첩)' }
+    ],
+    links: [
+      { label: '지니스쿨 한국사', q: '지니스쿨 한국사' },
+      { label: '설쌤 한국사 대모험', q: '설쌤 한국사 대모험' },
+      { label: '큰별쌤 최태성 초등 한국사', q: '큰별쌤 최태성 초등 한국사' },
+      { label: 'EBS 덩이랑 쾡이랑 인물한국사', url: 'https://home.ebs.co.kr/dqhistory/main', d: 'EBS 공식 다시보기' }
+    ],
+    quiz: [
+      { q: '고조선을 세운 사람은 누구일까요?', opts: ['단군왕검', '세종대왕', '이순신'], ans: 0, why: '단군왕검이 고조선을 세웠다는 이야기가 전해져요. 그래서 10월 3일은 개천절이에요.' },
+      { q: '백성이 쉽게 글을 읽도록 한글을 만든 임금님은?', opts: ['세종대왕', '단군왕검', '이순신'], ans: 0, why: '세종대왕이 한글을 만들었어요. 한글은 세계에서 가장 과학적인 글자라는 말을 들어요.' },
+      { q: '이순신 장군이 이끌던, 거북 모양의 배는?', opts: ['거북선', '비행선', '잠수함'], ans: 0, why: '거북선은 등이 거북처럼 생긴 배예요. 이순신 장군이 거북선을 이끌고 싸웠어요.' }
+    ]
+  },
+  {
+    id: 'hero', name: '위인', emoji: '🌟', color: '#EFAE12', soft: '#FFF7DC', deep: '#8A6100', dot: '#EFAE12',
+    line: '위인도 처음엔 평범한 아이였어요',
+    keyline: '위인도 처음엔 평범한 아이였어요. 궁금해하고, 포기하지 않았을 뿐!',
+    stories: [
+      { e: '👑', t: '세종대왕', d: '백성을 사랑한 임금님. 한글을 만들고, 장영실과 함께 해시계·물시계도 만들게 했어요.' },
+      { e: '🍇', t: '신사임당', d: '포도 그림으로 유명한 화가이자, 율곡 이이를 훌륭하게 키운 어머니예요.' },
+      { e: '💡', t: '에디슨', d: '수천 번 실패하고도 포기하지 않고 전구를 연구했어요. "실패는 또 하나의 방법을 알려 줄 뿐"이라고 말했어요.' }
+    ],
+    links: [
+      { label: 'EBS 덩이랑 쾡이랑 인물한국사 — 위인 이야기', q: 'EBS 덩이랑 쾡이랑 인물한국사' },
+      { label: '그리스 로마 신화 — 올림포스의 별', q: 'EBS 올림포스의 별' },
+      { label: '세종대왕·신사임당·에디슨 위인전', q: '위인전 세종대왕 신사임당 에디슨' },
+      { label: '올림포스의 별 — EBS 공식 다시보기', url: 'https://home.ebs.co.kr/Olympus/main', d: '영웅 이야기로 배우는 신화' }
+    ],
+    quiz: [
+      { q: '포도 그림으로 유명한 위인은 누구일까요?', opts: ['신사임당', '세종대왕', '에디슨'], ans: 0, why: '신사임당은 포도와 풀벌레를 섬세하게 그린 화가였어요.' },
+      { q: '전구를 오래 켜 둘 수 있게 만드는 데 힘쓴 위인은?', opts: ['에디슨', '신사임당', '장영실'], ans: 0, why: '에디슨은 수많은 실험 끝에 오래 켜지는 전구를 만들었어요.' },
+      { q: '세종대왕과 함께 해시계·물시계를 만든 과학자는?', opts: ['장영실', '에디슨', '이순신'], ans: 0, why: '장영실은 세종대왕 때 해시계, 물시계 같은 과학 기구를 만든 과학자예요.' }
+    ]
+  },
+  {
+    id: 'news', name: '시사상식', emoji: '🌍', color: '#21B79A', soft: '#E4F8F2', deep: '#0B7A61', dot: '#21B79A',
+    line: '세상 돌아가는 걸 알면 힘이 생겨요',
+    keyline: '세상이 어떻게 돌아가는지 알면, 나를 지키는 힘이 생겨요.',
+    stories: [
+      { e: '♻️', t: '기후와 분리배출', d: '쓰레기를 잘 나누면 지구가 덜 아파요. 투명 페트병은 라벨을 떼고, 내용물을 비우고, 찌그러뜨려서 플라스틱으로!' },
+      { e: '🐷', t: '용돈과 저축', d: '용돈을 받으면 "쓸 돈"과 "모을 돈"으로 먼저 나눠요. 모은 돈으로 갖고 싶은 걸 사면 더 뿌듯해요.' },
+      { e: '🤖', t: 'AI 로봇', d: 'AI는 많이 배워서 계산하고 반복하는 일을 잘해요. 하지만 사람의 마음을 느끼는 건 아직 어려워요.' }
+    ],
+    links: [
+      { label: 'EBS 자본주의 편의점 — 어린이 경제', q: 'EBS 자본주의 편의점' },
+      { label: 'EBS 시간을 달리는 세계사', q: 'EBS 시간을 달리는 세계사' },
+      { label: '어린이 분리배출·환경 교육', q: '어린이 환경 분리배출 교육 영상' },
+      { label: '시간을 달리는 세계사 — EBS 공식', url: 'https://home.ebs.co.kr/w-history/main', d: '퀴즈로 배우는 세계사' }
+    ],
+    quiz: [
+      { q: '다 마신 투명 페트병은 어디에 버릴까요?', opts: ['라벨을 떼고 플라스틱', '음식물 쓰레기', '그냥 일반 쓰레기'], ans: 0, why: '투명 페트병은 라벨을 떼고 내용물을 비운 뒤 플라스틱으로 버려요. 그러면 새 옷이나 새 병으로 다시 태어나요.' },
+      { q: '용돈 1,000원을 받았어요. 가장 좋은 습관은?', opts: ['받자마자 다 쓴다', '조금씩 모아서 저축한다', '친구에게 다 준다'], ans: 1, why: '조금씩 모으면 내 힘으로 갖고 싶은 것을 살 수 있어요.' },
+      { q: 'AI 로봇이 사람보다 잘하는 일은?', opts: ['계산하고 반복하는 일', '사람 마음을 완벽히 아는 일', '맛있는 밥을 짓는 일'], ans: 0, why: 'AI는 많이 배운 것을 바탕으로 계산과 반복을 잘해요. 마음을 느끼고 판단하는 건 아직 어려워요.' }
+    ]
+  }
+];
+
+const SUBJECT_BY_ID = Object.fromEntries(SUBJECTS.map(s => [s.id, s]));
+const TOTAL_QUIZ = SUBJECTS.reduce((n, s) => n + s.quiz.length, 0);
+const ALL_SENTENCES = ENGLISH_STEPS.flatMap((st, si) =>
+  st.sentences.map((s, i) => ({ ...s, step: si, stepName: st.name, idx: 0 }))
+);
+ALL_SENTENCES.forEach((s, i) => { s.idx = i; });
+
+const EMOJI_CHOICES = ['🦁','🐰','🐶','🐱','🦊','🐼','🐨','🐯','🐻','🐷','🐸','🐵','🦄','🐧','🐢','🦋'];
+const DEFAULT_PROFILES = [
+  { id: 'p1', name: '찬우', emoji: '🦁' },
+  { id: 'p2', name: '친구 2', emoji: '🐰' },
+  { id: 'p3', name: '친구 3', emoji: '🐶' },
+  { id: 'p4', name: '친구 4', emoji: '🐱' },
+  { id: 'p5', name: '친구 5', emoji: '🦊' }
+];
+
+/* ─────────────────────────── 2. SyncAdapter ───────────────────────────
+   앱의 저장·공유는 오직 이 인터페이스를 통해서만 이뤄집니다.
+   나중에 5명 폰끼리 실시간 공유(Supabase 등)를 붙일 때는
+   아래 어댑터를 하나 더 만들어 setAdapter()로 갈아끼우기만 하면 됩니다.
+
+   갖춰야 할 메서드
+     async load()               → {profiles, activeId, progress, settings}
+     async save(state)          → 저장 (전체 스냅샷)
+     subscribe(onChange)        → unsubscribe 함수. 다른 폰의 변경을 알려줄 때 사용
+   ─────────────────────────────────────────────────────────────────── */
+const STORE_KEY = 'kidsStudyApp.v1';
+
+const LocalStorageAdapter = {
+  name: 'local',
+  async load() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  },
+  async save(state) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* 저장 불가 환경: 메모리로만 동작 */ }
+  },
+  subscribe(/* onChange */) { return () => {}; }
+};
+
+const SyncAdapter = {
+  adapter: LocalStorageAdapter,
+  setAdapter(a) { this.adapter = a; },
+  async load() { return this.adapter.load(); },
+  async save(state) { return this.adapter.save(state); },
+  subscribe(cb) { return this.adapter.subscribe(cb); }
+};
+
+/* ─────────────────────────── 3. 상태 ─────────────────────────── */
+
+let state = {
+  profiles: DEFAULT_PROFILES.map(p => ({ ...p })),
+  activeId: 'p1',
+  progress: {},        // { [pid]: { 'YYYY-MM-DD': { [sid]: { q:{idx:1}, s:{idx:1} } } } }
+  settings: { rate: 1.0 }
+};
+
+function todayKey(d = new Date()) {
+  const p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+function dateLabel(d = new Date()) {
+  const w = ['일', '월', '화', '수', '목', '금', '토'][d.getDay()];
+  return (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + w + '요일';
+}
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+let saveTimer = null;
+function persist() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { SyncAdapter.save(state); }, 80);
+}
+
+/* 기록 조회 */
+function dayRec(pid, day = todayKey()) { const p = state.progress[pid]; return p ? p[day] : null; }
+function subRec(pid, sid, day = todayKey()) { const d = dayRec(pid, day); return d ? d[sid] : null; }
+function ensureSub(pid, sid, day) {
+  const p = state.progress[pid] || (state.progress[pid] = {});
+  const d = p[day] || (p[day] = {});
+  const s = d[sid] || (d[sid] = { q: {}, s: {} });
+  if (!s.q) s.q = {};
+  if (!s.s) s.s = {};
+  return s;
+}
+function quizCount(pid, sid, day = todayKey()) {
+  const s = subRec(pid, sid, day);
+  return s && s.q ? Object.keys(s.q).length : 0;
+}
+function speakCount(pid, sid, day = todayKey()) {
+  const s = subRec(pid, sid, day);
+  return s && s.s ? Object.keys(s.s).length : 0;
+}
+function dayStamps(pid, day = todayKey()) {
+  return SUBJECTS.reduce((n, sub) => n + quizCount(pid, sub.id, day) + speakCount(pid, sub.id, day), 0);
+}
+function dayQuizStamps(pid, day = todayKey()) {
+  return SUBJECTS.reduce((n, sub) => n + quizCount(pid, sub.id, day), 0);
+}
+function totalStamps(pid) {
+  const p = state.progress[pid]; if (!p) return 0;
+  let n = 0;
+  for (const day of Object.keys(p)) n += dayStamps(pid, day);
+  return n;
+}
+function hasStudiedToday(pid) { return dayStamps(pid) > 0; }
+
+function awardQuiz(sid, qi) {
+  const s = ensureSub(state.activeId, sid, todayKey());
+  if (s.q[qi]) return false;
+  s.q[qi] = 1; persist(); return true;
+}
+function awardSpeak(sid, si) {
+  const s = ensureSub(state.activeId, sid, todayKey());
+  if (s.s[si]) return false;
+  s.s[si] = 1; persist(); return true;
+}
+
+/* ─────────────────────────── 4. 화면 상태 ─────────────────────────── */
+
+let view = 'home';
+let subjectTab = 'learn';   // learn | quiz
+let engStep = 0;            // 0,1,2 또는 'all'
+let quiz = { i: 0, picked: null, feedback: null };
+let practice = { idx: null, rec: null, timer: null, listening: false, ended: false };
+let playToken = 0;
+let currentSubjectId = null;
+let subjectFrom = 'study';
+
+/* ─────────────────────────── 5. 공통 UI 도우미 ─────────────────────────── */
+
+const $ = (sel, root = document) => root.querySelector(sel);
+const toastEl = $('#toast');
+let toastTimer = null;
+function toast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2300);
+}
+function fx(text, el) {
+  const layer = $('#fx');
+  const r = el ? el.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 2, width: 0, height: 0 };
+  const d = document.createElement('div');
+  d.className = 'fx-float';
+  d.textContent = text;
+  d.style.left = (r.left + r.width / 2) + 'px';
+  d.style.top = (r.top + r.height / 2) + 'px';
+  layer.appendChild(d);
+  setTimeout(() => d.remove(), 950);
+}
+function activeProfile() {
+  return state.profiles.find(p => p.id === state.activeId) || state.profiles[0];
+}
+
+/* ─────────────────────────── 6. 렌더: 상단 친구 선택 ─────────────────────────── */
+
+function renderFriendStrip() {
+  const strip = $('#friendStrip');
+  // 설정 화면에서는 숨김
+  const visible = view !== 'settings' && view !== 'subject';
+  strip.hidden = !visible;
+  if (!visible) return;
+  strip.innerHTML = state.profiles.map(p => {
+    const done = hasStudiedToday(p.id);
+    const on = p.id === state.activeId;
+    return '<button class="friend ' + (on ? 'on' : '') + '" data-action="pick-profile" data-id="' + p.id + '" aria-pressed="' + on + '">' +
+      '<span class="friend-dot ' + (done ? 'on' : '') + '"></span>' +
+      '<span class="friend-ava">' + p.emoji + '</span>' +
+      '<span class="friend-name">' + esc(p.name) + '</span>' +
+      '</button>';
+  }).join('');
+}
+
+function renderTopbar() {
+  $('#topStamps').textContent = totalStamps(state.activeId);
+}
+
+/* ─────────────────────────── 7. 렌더: 홈 ─────────────────────────── */
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 11) return '좋은 아침이야';
+  if (h < 17) return '안녕';
+  if (h < 22) return '좋은 저녁이야';
+  return '늦었는데 대단해';
+}
+
+function subjectCardHTML(sub) {
+  const n = quizCount(state.activeId, sub.id);
+  const speak = speakCount(state.activeId, sub.id);
+  const dots = Array.from({ length: sub.quiz.length }, (_, i) => '<i class="' + (i < n ? 'on' : '') + '" style="--dotcolor:' + sub.dot + '"></i>').join('');
+  const count = n + '/' + sub.quiz.length + (speak ? ' · 🎤' + speak : '');
+  return '<button class="subj" data-action="open-subject" data-id="' + sub.id + '">' +
+    '<span class="s-ico" style="--soft:' + sub.soft + '">' + sub.emoji + '</span>' +
+    '<span class="s-body">' +
+      '<span class="s-name">' + sub.name + '</span>' +
+      '<span class="s-line">' + esc(sub.line) + '</span>' +
+    '</span>' +
+    '<span class="s-right"><span class="dots">' + dots + '</span><span class="s-count">' + count + '</span></span>' +
+  '</button>';
+}
+
+function renderHome() {
+  const me = activeProfile();
+  const todayStamp = dayStamps(state.activeId);
+  const todayQuiz = dayQuizStamps(state.activeId);
+  const todaySent = ALL_SENTENCES[new Date().getDate() % ALL_SENTENCES.length];
+  const doneSubjects = SUBJECTS.filter(s => quizCount(state.activeId, s.id) === s.quiz.length).length;
+
+  const greet =
+    todayQuiz === 0 ? '오늘 첫 도장을 찍어 볼까?' :
+    doneSubjects >= 5 ? '5과목 전부 도장! 오늘 최고야 🎉' :
+    todayQuiz >= 9 ? '벌써 ' + todayQuiz + '개 도장! 기세 좋다 🔥' :
+    '오늘 ' + todayQuiz + '개 도장! 조금만 더 가자 💪';
+
+  $('#view-home').innerHTML =
+    '<div class="hero">' +
+      '<div class="hero-top"><span class="hero-date">' + dateLabel() + '</span>' +
+        '<span class="hero-date">🏅 누적 ' + totalStamps(state.activeId) + '개</span></div>' +
+      '<div class="hero-hi">' + greeting() + ', ' + esc(me.name) + '! ' + me.emoji + '</div>' +
+      '<div class="hero-sub">' + greet + '</div>' +
+      '<div class="hero-stats">' +
+        '<span class="hero-stat"><em>🏅</em>오늘 ' + todayStamp + '개</span>' +
+        '<span class="hero-stat"><em>📖</em>' + doneSubjects + '/5 과목 완료</span>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="sec-head"><h3>오늘의 영어 한 문장</h3>' +
+      '<button class="more" data-action="open-subject" data-id="english">영어 전체 →</button></div>' +
+    '<div class="enq">' +
+      '<span class="q-emoji">' + todaySent.emoji + '</span>' +
+      '<span class="q-body"><span class="q-en">' + esc(todaySent.en) + '</span>' +
+        '<span class="q-ko">' + esc(todaySent.ko) + '</span></span>' +
+      '<button class="icon-btn" data-action="say-sentence" data-idx="' + todaySent.idx + '" aria-label="듣기">🔊</button>' +
+    '</div>' +
+
+    '<div class="sec-head"><h3>오늘 공부할 5과목</h3><span class="more">퀴즈 3~4문제</span></div>' +
+    '<div class="subj-grid">' + SUBJECTS.map(subjectCardHTML).join('') + '</div>' +
+
+    '<div class="sec-head"><h3>우리 반 오늘</h3>' +
+      '<button class="more" data-action="go" data-view="board">도장판 →</button></div>' +
+    boardMiniHTML();
+
+  renderTopbar();
+}
+
+function boardMiniHTML() {
+  const done = state.profiles.filter(p => hasStudiedToday(p.id)).length;
+  const rows = state.profiles.map(p => {
+    const on = p.id === state.activeId;
+    const d = hasStudiedToday(p.id);
+    return '<div class="kid ' + (on ? 'me ' : '') + (d ? 'ok' : '') + '" style="margin-top:8px">' +
+      '<span class="k-ava">' + p.emoji + '</span>' +
+      '<span class="k-body"><span class="k-name">' + esc(p.name) + '</span>' +
+        '<span class="k-badges">' + (d ? '<span class="k-badge b0">오늘 ' + dayStamps(p.id) + '도장</span>' : '<span class="k-badge">아직 시작 전</span>') + '</span></span>' +
+      '<span class="k-status ' + (d ? '' : 'todo') + '">' + (d ? '✅ 완료' : '⬜ 아직') + '</span>' +
+    '</div>';
+  }).join('');
+  return '<div class="board-sum"><div><b>' + done + '명</b><span>오늘 완료</span></div>' +
+    '<div><b>' + (5 - done) + '명</b><span>아직</span></div></div>' + rows;
+}
+
+/* ─────────────────────────── 8. 렌더: 공부(과목 목록) ─────────────────────────── */
+
+function renderStudy() {
+  const today = dayQuizStamps(state.activeId);
+  $('#view-study').innerHTML =
+    '<h2 class="page-title">📖 오늘의 공부</h2>' +
+    '<p class="page-sub">과목마다 영상 2~3개 · 핵심 카드 · 퀴즈 3~4문제 · 도장</p>' +
+    '<div class="subj-grid">' + SUBJECTS.map(subjectCardHTML).join('') + '</div>' +
+    '<div class="note">오늘 모은 퀴즈 도장 <b>' + today + '/' + TOTAL_QUIZ + '</b> · 영어 따라읽기 도장은 따로 쌓여요 🎤</div>';
+  renderTopbar();
+}
+
+/* ─────────────────────────── 9. 렌더: 과목 상세 ─────────────────────────── */
+
+function renderSubject() {
+  const sub = SUBJECT_BY_ID[currentSubjectId];
+  if (!sub) { showView('study'); return; }
+  const head =
+    '<button class="back-btn" data-action="back" aria-label="뒤로">←</button>' +
+    '<div class="detail-head" style="--soft:' + sub.soft + '">' +
+      '<span class="d-ico">' + sub.emoji + '</span>' +
+      '<div><h2>' + sub.name + '</h2><p>' + esc(sub.line) + '</p></div>' +
+    '</div>' +
+    '<div class="seg2">' +
+      '<button class="' + (subjectTab === 'learn' ? 'on' : '') + '" data-action="subtab" data-tab="learn">📚 배우기</button>' +
+      '<button class="' + (subjectTab === 'quiz' ? 'on' : '') + '" data-action="subtab" data-tab="quiz">🎯 퀴즈 ' + quizCount(state.activeId, sub.id) + '/' + sub.quiz.length + '</button>' +
+    '</div>';
+
+  const body = subjectTab === 'learn' ? learnHTML(sub) : quizHTML(sub);
+  $('#view-subject').innerHTML = head + body;
+  renderTopbar();
+}
+
+function learnHTML(sub) {
+  let h = '<div class="keyline" style="--soft:' + sub.soft + ';--deep:' + sub.deep + ';--line2:' + sub.color + '33">' +
+    '<span class="k-label">핵심 한 줄</span>' + esc(sub.keyline) + '</div>';
+
+  if (sub.id === 'english') {
+    h += englishHTML();
+  } else {
+    h += sub.stories.map(st =>
+      '<div class="story"><span class="st-e">' + st.e + '</span>' +
+      '<div><div class="st-t">' + esc(st.t) + '</div><div class="st-d">' + esc(st.d) + '</div></div></div>'
+    ).join('');
+    h += '<div class="sec-head"><h3>🎬 같이 볼 영상</h3><span class="more">추천 링크</span></div>' +
+      '<div class="yt-list">' + ytListHTML(sub) + '</div>';
+  }
+  return h;
+}
+
+function ytListHTML(sub) {
+  return sub.links.map(y => {
+    const url = y.url ? y.url : yt(y.q);
+    const isSite = !!y.url;
+    return '<a class="yt' + (isSite ? ' site' : '') + '" href="' + url + '" target="_blank" rel="noopener noreferrer">' +
+      '<span class="yt-ico">' + (isSite ? '🌐' : '▶️') + '</span>' +
+      '<span class="yt-t">' + esc(y.label) + (y.d ? '<span class="yt-d">' + esc(y.d) + '</span>' : '') + '</span>' +
+      '<span class="yt-go">↗</span></a>';
+  }).join('');
+}
+
+/* ── 영어 파트 ── */
+function currentStepSentences() {
+  if (engStep === 'all') return ALL_SENTENCES;
+  return ENGLISH_STEPS[engStep].sentences.map((s, i) => ({ ...s, idx: engStep * 5 + i }));
+}
+
+function englishHTML() {
+  const rate = state.settings.rate || 1;
+  let h = '';
+
+  h += '<div class="eng-ctrl">' +
+    '<div class="seg-rate" role="group" aria-label="재생 속도">' +
+      '<button class="' + (rate === 0.8 ? 'on' : '') + '" data-action="rate" data-rate="0.8">🐢 천천히 0.8x</button>' +
+      '<button class="' + (rate === 1 ? 'on' : '') + '" data-action="rate" data-rate="1">🔊 보통 1.0x</button>' +
+    '</div>' +
+    '<div class="play-row">' +
+      '<button data-action="play-step">▶️ 이 단계 이어 듣기</button>' +
+      '<button data-action="play-all">🎧 15문장 전체</button>' +
+      '<button class="stop" data-action="stop-play" aria-label="멈춤">⏹</button>' +
+    '</div>' +
+  '</div>';
+
+  h += '<div class="step-chips">' +
+    ENGLISH_STEPS.map((st, i) =>
+      '<button class="' + (engStep === i ? 'on' : '') + '" data-action="step" data-step="' + i + '">' + (st.short || st.name) + '</button>'
+    ).join('') +
+    '<button class="' + (engStep === 'all' ? 'on' : '') + '" data-action="step" data-step="all">전체 15</button>' +
+  '</div>';
+
+  const list = currentStepSentences();
+  let lastStep = -1;
+  h += list.map(s => {
+    let group = '';
+    if (engStep === 'all' && s.step !== lastStep) {
+      lastStep = s.step;
+      group = '<div class="step-title">' + ENGLISH_STEPS[s.step].name + ' · ' + ENGLISH_STEPS[s.step].title + '</div>';
+    }
+    const done = !!((subRec(state.activeId, 'english', todayKey()) || {}).s || {})[s.idx];
+    return group +
+      '<article class="sent ' + (done ? 'done' : '') + '" data-sent="' + s.idx + '">' +
+        '<div class="sent-head">' +
+          '<span class="sent-e">' + s.emoji + '</span>' +
+          '<div class="sent-main">' +
+            '<div class="sent-en">' + esc(s.en) + '</div>' +
+            '<div class="sent-ko">' + esc(s.ko) + '</div>' +
+            '<div class="sent-tip">🗣️ ' + esc(s.tip) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="sent-btns">' +
+          '<button data-action="say" data-idx="' + s.idx + '">🔊 듣기</button>' +
+          '<button class="mic" data-action="practice" data-idx="' + s.idx + '">🎤 따라 말하기</button>' +
+        '</div>' +
+        '<div class="practice" hidden></div>' +
+        '<div class="sent-stamp">🏅 오늘 따라읽기 도장 받았어요</div>' +
+      '</article>';
+  }).join('');
+
+  h += '<div class="sec-head"><h3>🎬 같이 볼 영상 · 사이트</h3><span class="more">추천</span></div>' +
+    '<div class="yt-list">' + ytListHTML(SUBJECT_BY_ID.english) + '</div>';
+
+  h += '<div class="note">🔈 소리가 안 들리면 폰의 미디어 음량과 무음 모드를 확인해 주세요. ' +
+    '🎤 따라 말하기는 목소리 인식을 지원하는 브라우저에서는 실제 발음을 확인하고, ' +
+    '지원하지 않으면 3초 타이머로 도장을 받아요.</div>';
+  return h;
+}
+
+/* ── 퀴즈 파트 ── */
+function quizHTML(sub) {
+  const total = sub.quiz.length;
+  const myQuiz = quizCount(state.activeId, sub.id);
+  let h = '<div class="quiz-top">' +
+    '<div class="quiz-dots">' + sub.quiz.map((_, i) => {
+      const rec = (subRec(state.activeId, sub.id) || { q: {} }).q || {};
+      const cls = rec[i] ? 'ok' : (i === quiz.i ? 'now' : '');
+      return '<i class="' + cls + '"></i>';
+    }).join('') + '</div>' +
+    '<span class="quiz-pill">오늘 🏅 ' + myQuiz + '/' + total + '</span>' +
+  '</div>';
+
+  if (quiz.i >= total) {
+    const right = sub.quiz.reduce((n, _, i) => {
+      const rec = (subRec(state.activeId, sub.id) || { q: {} }).q || {};
+      return n + (rec[i] ? 1 : 0);
+    }, 0);
+    h += '<div class="qcard"><div class="result">' +
+      '<div class="big">' + (right === total ? '🏆' : right > 0 ? '🎉' : '🌱') + '</div>' +
+      '<h3>' + total + '문제 중 ' + right + '개 정답!</h3>' +
+      '<p>' + (right === total ? '완벽해요! 오늘 ' + sub.name + ' 도장 ' + total + '개를 모두 모았어요.' :
+            right > 0 ? '도장 ' + right + '개를 받았어요. 한 번 더 풀면 더 잘할 수 있어요!' :
+            '괜찮아요. 배우기 탭을 한 번 읽고 다시 도전해 봐요!') + '</p>' +
+      '<div class="stamps">' + '🏅'.repeat(Math.max(right, 0)) + '</div>' +
+      '<button class="btn-primary" data-action="retry-quiz">🔁 다시 풀기</button>' +
+      '<button class="btn-ghost" data-action="subtab" data-tab="learn">📚 배우기로 돌아가기</button>' +
+    '</div></div>';
+    return h;
+  }
+
+  const q = sub.quiz[quiz.i];
+  h += '<div class="qcard">' +
+    '<div class="qnum">Q' + (quiz.i + 1) + ' / ' + total + '</div>' +
+    '<div class="qtext">' + esc(q.q) + '</div>' +
+    '<div class="opts">' + q.opts.map((o, i) => {
+      let cls = '';
+      if (quiz.picked !== null) {
+        if (i === q.ans) cls = 'right';
+        else if (i === quiz.picked) cls = 'wrong';
+      }
+      return '<button class="opt ' + cls + '" data-action="answer" data-i="' + i + '"' + (quiz.picked !== null ? ' disabled' : '') + '>' +
+        '<span class="num">' + (i + 1) + '</span><span>' + esc(o) + '</span></button>';
+    }).join('') + '</div>';
+
+  if (quiz.picked !== null) {
+    const ok = quiz.picked === q.ans;
+    h += '<div class="feedback ' + (ok ? 'ok' : 'no') + '">' +
+      '<span class="fb-t">' + (ok ? '정답이야! 🏅 도장 +1' : '아쉬워! 정답은 "' + esc(q.opts[q.ans]) + '"') + '</span>' +
+      esc(q.why) + '</div>' +
+      '<button class="btn-primary" data-action="next-q">' + (quiz.i + 1 >= total ? '결과 보기 →' : '다음 문제 →') + '</button>';
+  }
+  h += '</div>';
+  return h;
+}
+
+/* ─────────────────────────── 10. 렌더: 도장판 ─────────────────────────── */
+
+function renderBoard() {
+  const done = state.profiles.filter(p => hasStudiedToday(p.id)).length;
+  const rows = state.profiles.map(p => {
+    const on = p.id === state.activeId;
+    const isDone = hasStudiedToday(p.id);
+    const badges = SUBJECTS.map((sub, i) => {
+      const q = quizCount(p.id, sub.id);
+      const sp = speakCount(p.id, sub.id);
+      if (!q && !sp) return '';
+      const txt = sub.name + ' ' + q + (sp ? '·🎤' + sp : '');
+      return '<span class="k-badge b' + i + '">' + txt + '</span>';
+    }).join('');
+    return '<div class="kid ' + (on ? 'me ' : '') + (isDone ? 'ok' : '') + '">' +
+      '<span class="k-ava">' + p.emoji + '</span>' +
+      '<span class="k-body">' +
+        '<span class="k-name">' + esc(p.name) + (on ? '<span class="me-tag">나</span>' : '') + '</span>' +
+        '<span class="k-badges">' + (badges || '<span class="k-badge">오늘 도장 0개</span>') + '</span>' +
+      '</span>' +
+      '<span class="k-status ' + (isDone ? '' : 'todo') + '">' + (isDone ? '✅<br>완료' : '⬜<br>아직') + '</span>' +
+    '</div>';
+  }).join('');
+
+  $('#view-board').innerHTML =
+    '<h2 class="page-title">🏅 우리 반 오늘 공부 도장판</h2>' +
+    '<p class="page-sub">' + dateLabel() + ' · 도장 1개 이상이면 오늘 공부 완료!</p>' +
+    '<div class="board-sum">' +
+      '<div><b>' + done + '명</b><span>공부 완료</span></div>' +
+      '<div><b>' + (5 - done) + '명</b><span>아직</span></div>' +
+      '<div><b>' + state.profiles.reduce((n, p) => n + totalStamps(p.id), 0) + '개</b><span>누적 도장</span></div>' +
+    '</div>' +
+    rows +
+    '<button class="btn-primary" data-action="copy-board">📋 엄마들 단톡방에 오늘 현황 복사</button>' +
+    '<p class="note">친구들 폰과 실시간으로 나누는 기능은 다음 단계에서 붙일 수 있게 ' +
+      'SyncAdapter로 분리해 두었어요. 지금은 이 폰에만 기록돼요.</p>';
+  renderTopbar();
+}
+
+function boardText() {
+  const total = state.profiles.reduce((n, p) => n + dayStamps(p.id), 0);
+  const doneList = state.profiles.filter(p => hasStudiedToday(p.id));
+  const todoList = state.profiles.filter(p => !hasStudiedToday(p.id));
+
+  let t = '📚 우리 반 오늘 공부 도장판\n' + dateLabel() + ' · 도장 ' + total + '개\n';
+
+  t += '\n✅ 공부 완료 (' + doneList.length + '명)\n';
+  if (doneList.length) {
+    doneList.forEach(p => {
+      const parts = SUBJECTS.map(sub => {
+        const q = quizCount(p.id, sub.id);
+        return q ? sub.name + q : '';
+      }).filter(Boolean);
+      t += '· ' + p.name + ' ' + p.emoji + ' — 도장 ' + dayStamps(p.id) + '개' + (parts.length ? ' (' + parts.join(', ') + ')' : '') + '\n';
+    });
+  } else {
+    t += '· 아직 없어요\n';
+  }
+
+  t += '\n⬜ 아직 (' + todoList.length + '명)\n';
+  if (todoList.length) {
+    todoList.forEach(p => { t += '· ' + p.name + ' ' + p.emoji + '\n'; });
+  } else {
+    t += '· 없어요 — 우리 반 전원 완료! 🎉\n';
+  }
+
+  t += '\n오늘도 재밌게 공부했어요! 🎉';
+  return t;
+}
+
+async function copyBoard(btn) {
+  const text = boardText();
+  let ok = false;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      ok = true;
+    }
+  } catch (e) { ok = false; }
+
+  if (!ok) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '-1000px';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      ok = document.execCommand('copy');
+      ta.remove();
+    } catch (e) { ok = false; }
+  }
+
+  if (ok) {
+    if (btn) fx('📋 복사!', btn);
+    toast('복사했어요! 단톡방에 붙여넣기 하세요 📋');
+  } else {
+    showManualCopy(text);
+  }
+}
+
+function showManualCopy(text) {
+  const wrap = $('#modalWrap');
+  wrap.hidden = false;
+  wrap.className = 'modal-bg';
+  wrap.innerHTML = '<div class="modal" role="dialog" aria-modal="true" aria-label="현황 복사">' +
+    '<h3>📋 오늘 현황</h3><p>아래 글을 길게 눌러 전체 선택 → 복사해 주세요.</p>' +
+    '<textarea readonly>' + esc(text) + '</textarea>' +
+    '<div class="m-btns"><button data-action="close-modal">닫기</button>' +
+    '<button class="primary" data-action="select-copy">전체 선택</button></div></div>';
+  const ta = $('textarea', wrap);
+  setTimeout(() => { ta.focus(); ta.select(); }, 60);
+}
+
+/* ─────────────────────────── 11. 렌더: 설정 ─────────────────────────── */
+
+function renderSettings() {
+  const rows = state.profiles.map((p, i) =>
+    '<div class="prow">' +
+      '<select data-action="edit-emoji" data-id="' + p.id + '" aria-label="' + esc(p.name) + ' 이모지">' +
+        EMOJI_CHOICES.map(e => '<option value="' + e + '"' + (e === p.emoji ? ' selected' : '') + '>' + e + '</option>').join('') +
+      '</select>' +
+      '<input type="text" maxlength="8" value="' + esc(p.name) + '" data-action="edit-name" data-id="' + p.id + '" ' +
+        'placeholder="이름 (예: ' + (i === 0 ? '찬우' : '친구 ' + (i + 1)) + ')" aria-label="' + (i + 1) + '번 친구 이름">' +
+    '</div>'
+  ).join('');
+
+  const rate = state.settings.rate || 1;
+
+  $('#view-settings').innerHTML =
+    '<h2 class="page-title">⚙️ 설정</h2>' +
+    '<p class="page-sub">엄마·아빠가 바꾸는 공간이에요</p>' +
+
+    '<div class="set-card">' +
+      '<h3>👥 우리 반 친구 5명</h3>' +
+      '<p class="hint">이름과 동물 이모지를 바꿀 수 있어요. 입력한 이름은 이 기기에만 저장되고 밖으로 나가지 않아요.</p>' +
+      rows +
+    '</div>' +
+
+    '<div class="set-card">' +
+      '<h3>🔊 영어 소리 기본 속도</h3>' +
+      '<p class="hint">영어 문장을 들을 때 처음 재생되는 속도예요. 문장마다 🐢 버튼으로 천천히 들을 수도 있어요.</p>' +
+      '<div class="seg-rate">' +
+        '<button class="' + (rate === 0.8 ? 'on' : '') + '" data-action="rate" data-rate="0.8">🐢 천천히 0.8x</button>' +
+        '<button class="' + (rate === 1 ? 'on' : '') + '" data-action="rate" data-rate="1">🔊 보통 1.0x</button>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="set-card">' +
+      '<h3>🧹 기록 지우기</h3>' +
+      '<p class="hint">도장 기록은 이 폰에만 있어요. 지우면 되돌릴 수 없어요.</p>' +
+      '<button class="btn-ghost" data-action="reset-today">오늘 기록만 지우기</button>' +
+      '<button class="btn-ghost" data-action="reset-all" style="color:#C4511E;border-color:#FFD9C7">전체 기록 초기화</button>' +
+    '</div>' +
+
+    '<div class="about">🦁 우리 반 공부방 v1.0<br>초1 친구 5명 공동 학습 · 수학·영어·한국사·위인·시사상식<br>' +
+      '인터넷 없이도 열려요 · 기록은 이 기기에만</div>';
+
+  renderTopbar();
+}
+
+/* ─────────────────────────── 12. 화면 전환 ─────────────────────────── */
+
+function showView(name, opts = {}) {
+  view = name;
+  document.querySelectorAll('.view').forEach(sec => {
+    sec.hidden = sec.dataset.view !== name;
+  });
+  document.querySelectorAll('.tabbar button').forEach(b => {
+    const target = b.dataset.nav;
+    const on = target === name || (name === 'subject' && target === 'study');
+    b.classList.toggle('on', on);
+  });
+  stopSpeech();
+  closePractice();
+
+  if (name === 'home') renderHome();
+  else if (name === 'study') renderStudy();
+  else if (name === 'subject') renderSubject();
+  else if (name === 'board') renderBoard();
+  else if (name === 'settings') renderSettings();
+
+  renderFriendStrip();
+  if (!opts.keepScroll) window.scrollTo({ top: 0, behavior: 'instant' in document.documentElement.style ? 'instant' : 'auto' });
+}
+
+function openSubject(id) {
+  if (view !== 'subject') subjectFrom = view;
+  currentSubjectId = id;
+  subjectTab = 'learn';
+  quiz = { i: 0, picked: null, feedback: null };
+  showView('subject');
+}
+
+function refreshCurrent() {
+  if (view === 'home') renderHome();
+  else if (view === 'study') renderStudy();
+  else if (view === 'subject') renderSubject();
+  else if (view === 'board') renderBoard();
+  else if (view === 'settings') renderSettings();
+  renderFriendStrip();
+  renderTopbar();
+}
+
+/* ─────────────────────────── 13. 음성: TTS ─────────────────────────── */
+
+const ttsOK = typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+let cachedVoices = [];
+
+function refreshVoices() {
+  if (!ttsOK) return;
+  try { cachedVoices = window.speechSynthesis.getVoices() || []; } catch (e) { cachedVoices = []; }
+}
+if (ttsOK) {
+  refreshVoices();
+  try { window.speechSynthesis.addEventListener('voiceschanged', refreshVoices); } catch (e) {}
+}
+
+function pickEnVoice() {
+  if (!cachedVoices.length) refreshVoices();
+  const list = cachedVoices;
+  if (!list.length) return null;
+  return list.find(v => /^en[-_]US/i.test(v.lang) && /female|samantha|zira|google us/i.test(v.name)) ||
+         list.find(v => /^en[-_]US/i.test(v.lang)) ||
+         list.find(v => /^en[-_]GB/i.test(v.lang)) ||
+         list.find(v => /^en/i.test(v.lang)) || null;
+}
+
+function speakText(text, rate, onDone) {
+  if (!ttsOK) {
+    toast('이 브라우저는 소리 읽기를 지원하지 않아요 😢');
+    if (onDone) onDone();
+    return;
+  }
+  try { window.speechSynthesis.cancel(); } catch (e) {}
+  let done = false;
+  const finish = () => { if (!done) { done = true; if (onDone) onDone(); } };
+  try {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    u.rate = rate;
+    u.pitch = 1.05;
+    const v = pickEnVoice();
+    if (v) u.voice = v;
+    u.onend = finish;
+    u.onerror = finish;
+    window.speechSynthesis.speak(u);
+    // 일부 브라우저에서 onend가 오지 않는 경우를 대비한 안전장치
+    setTimeout(() => { if (!done && !window.speechSynthesis.speaking) finish(); }, Math.max(2500, text.length * 220));
+  } catch (e) {
+    finish();
+  }
+}
+
+function stopSpeech() {
+  playToken++;
+  clearPlaying();
+  if (ttsOK) { try { window.speechSynthesis.cancel(); } catch (e) {} }
+}
+
+function clearPlaying() {
+  document.querySelectorAll('.sent.playing').forEach(el => el.classList.remove('playing'));
+}
+
+function markPlaying(idx) {
+  clearPlaying();
+  const el = document.querySelector('.sent[data-sent="' + idx + '"]');
+  if (el) {
+    el.classList.add('playing');
+    const r = el.getBoundingClientRect();
+    if (r.top < 70 || r.bottom > innerHeight - 90) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function playSequence(indices, rate) {
+  stopSpeech();
+  const token = ++playToken;
+  const go = (k) => {
+    if (token !== playToken) return;
+    if (k >= indices.length) { clearPlaying(); return; }
+    const idx = indices[k];
+    const s = ALL_SENTENCES[idx];
+    markPlaying(idx);
+    speakText(s.en, rate, () => {
+      if (token !== playToken) return;
+      setTimeout(() => go(k + 1), 260);
+    });
+  };
+  go(0);
+}
+
+function speakOne(idx, rateOverride) {
+  stopSpeech();
+  const s = ALL_SENTENCES[idx];
+  if (!s) return;
+  const rate = rateOverride || state.settings.rate || 1;
+  markPlaying(idx);
+  speakText(s.en, rate, () => { setTimeout(clearPlaying, 350); });
+}
+
+/* ─────────────────────────── 14. 음성: 따라 읽기 ─────────────────────────── */
+
+const SR = (typeof window !== 'undefined') && (window.SpeechRecognition || window.webkitSpeechRecognition);
+const srSupported = !!SR;
+
+function practicePanel(idx) {
+  return document.querySelector('.sent[data-sent="' + idx + '"] .practice');
+}
+
+function closePractice() {
+  practice.ended = true;
+  if (practice.rec) { try { practice.rec.abort(); } catch (e) {} practice.rec = null; }
+  if (practice.timer) { clearInterval(practice.timer); practice.timer = null; }
+  practice.idx = null; practice.listening = false; practice.ended = false;
+  document.querySelectorAll('.practice').forEach(p => { p.hidden = true; p.innerHTML = ''; });
+}
+
+function openPractice(idx) {
+  const card = document.querySelector('.sent[data-sent="' + idx + '"]');
+  if (!card) return;
+  const already = !!(subRec(state.activeId, 'english', todayKey()) || {}).s?.[idx];
+  const panel = card.querySelector('.practice');
+
+  // 다른 패널 닫기
+  if (practice.idx !== idx) {
+    closePractice();
+  }
+  stopSpeech();
+  practice.idx = idx;
+  practice.ended = false;
+  panel.hidden = false;
+
+  if (already) {
+    panel.innerHTML = '<div class="p-t">🏅 오늘 이미 도장을 받았어요</div>' +
+      '<div class="p-d">한 번 더 따라 말해 보면 입에 더 잘 붙어요!</div>' +
+      '<div class="p-btns"><button class="primary" data-action="practice-again" data-idx="' + idx + '">🎤 한 번 더 해보기</button></div>';
+    return;
+  }
+
+  if (srSupported) {
+    startListening(idx, panel);
+  } else {
+    startCountdown(idx, panel);
+  }
+}
+
+function startCountdown(idx, panel) {
+  if (practice.timer) { clearTimeout(practice.timer); practice.timer = null; }
+  practice.listening = false;
+  let n = 3;
+  const draw = () => {
+    panel.innerHTML = '<div class="p-t">🎤 3초 동안 크게 따라 말해 보세요</div>' +
+      '<div class="countdown">' + n + '<small>또박또박, 입 밖으로!</small></div>' +
+      '<div class="p-btns"><button class="primary" data-action="give-stamp" data-idx="' + idx + '">🎤 따라 읽었어요! 도장 받기</button></div>';
+  };
+  draw();
+  practice.timer = setInterval(() => {
+    n--;
+    if (n > 0) { draw(); return; }
+    clearInterval(practice.timer); practice.timer = null;
+    panel.innerHTML = '<div class="p-t">잘 했어요! 👏</div>' +
+      '<div class="p-d">이 브라우저는 목소리 알아듣기를 지원하지 않아서, 스스로 확인하고 도장을 받아요.</div>' +
+      '<div class="p-btns"><button class="primary" data-action="give-stamp" data-idx="' + idx + '">🎤 따라 읽었어요! 도장 받기</button>' +
+      '<button data-action="practice-again" data-idx="' + idx + '">🔁 다시</button></div>';
+  }, 1000);
+}
+
+function startListening(idx, panel) {
+  let rec;
+  try { rec = new SR(); } catch (e) { startCountdown(idx, panel); return; }
+  practice.rec = rec;
+  practice.listening = true;
+  practice.ended = false;
+  let transcript = '';
+
+  rec.lang = 'en-US';
+  rec.interimResults = true;
+  rec.continuous = false;
+  rec.maxAlternatives = 1;
+
+  panel.innerHTML = '<div class="p-t">🎤 듣고 있어요… 영어로 말해 보세요</div>' +
+    '<div class="p-d">또박또박, ' + esc(ALL_SENTENCES[idx].en) + '</div>' +
+    '<div class="live" id="liveBox">…</div>' +
+    '<div class="p-btns"><button data-action="practice-stop" data-idx="' + idx + '">⏹ 그만</button></div>';
+
+  const liveBox = panel.querySelector('#liveBox');
+
+  rec.onresult = (e) => {
+    let t = '';
+    for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript + ' ';
+    transcript = t.trim();
+    if (liveBox && transcript) liveBox.textContent = '👂 ' + transcript;
+  };
+  rec.onerror = (e) => {
+    if (practice.ended) return;
+    practice.ended = true;
+    practice.listening = false;
+    // 마이크 거부·인식 실패 → 타이머 폴백
+    const msg = (e && (e.error === 'not-allowed' || e.error === 'service-not-allowed'))
+      ? '마이크를 쓸 수 없어서 3초 타이머로 바꿀게요'
+      : '목소리를 잘 못 들었어요. 3초 타이머로 바꿀게요';
+    toast(msg);
+    startCountdown(idx, panel);
+  };
+  rec.onend = () => {
+    if (practice.ended) return;
+    practice.ended = true;
+    practice.listening = false;
+    evaluateSpeech(idx, transcript, panel);
+  };
+
+  try { rec.start(); } catch (e) {
+    practice.ended = true;
+    startCountdown(idx, panel);
+    return;
+  }
+
+  // 안전장치: 7초 안에 아무 반응이 없으면(마이크 없음·인식 멈춤) 타이머 모드로
+  if (practice.timer) clearTimeout(practice.timer);
+  practice.timer = setTimeout(() => {
+    if (practice.ended || practice.idx !== idx) return;
+    ringStop(rec);
+    if (!transcript.trim()) {
+      practice.ended = true;
+      practice.listening = false;
+      startCountdown(idx, panel);
+    }
+  }, 7000);
+}
+
+function ringStop(rec) {
+  try { rec.stop(); } catch (e) { try { rec.abort(); } catch (e2) {} }
+}
+
+function words(s) {
+  return String(s || '').toLowerCase().replace(/[^a-z' ]/g, ' ').split(/\s+/).filter(Boolean);
+}
+function similarity(target, heard) {
+  const t = words(target), h = words(heard);
+  if (!t.length) return 0;
+  if (!h.length) return 0;
+  let hit = 0;
+  t.forEach(w => {
+    if (h.some(x => x === w || (w.length >= 4 && (x.indexOf(w.slice(0, 4)) === 0 || w.indexOf(x.slice(0, 4)) === 0)))) hit++;
+  });
+  return hit / t.length;
+}
+
+function evaluateSpeech(idx, transcript, panel) {
+  if (practice.timer) { clearTimeout(practice.timer); practice.timer = null; }
+  const target = ALL_SENTENCES[idx].en;
+  const score = similarity(target, transcript);
+  const good = score >= 0.6;
+  const heard = transcript ? '<div class="live">👂 ' + esc(transcript) + '</div>' : '<div class="live">👂 (잘 안 들렸어요)</div>';
+  panel.innerHTML =
+    '<div class="p-t">' + (good ? '잘했어요! 🎉' : (transcript ? '거의 다 왔어요!' : '한 번 더 해볼까요?')) + '</div>' +
+    heard +
+    '<div class="p-d" style="margin-top:7px">' + (good
+      ? '발음이 잘 들렸어요. 도장을 받아요!'
+      : '천천히 듣고 다시 말해 보세요. 그래도 도장은 받을 수 있어요.') + '</div>' +
+    '<div class="p-btns">' +
+      '<button class="primary" data-action="give-stamp" data-idx="' + idx + '">🏅 도장 받기</button>' +
+      '<button data-action="practice-again" data-idx="' + idx + '">🔁 다시 말하기</button>' +
+    '</div>';
+}
+
+function giveStamp(idx, btn) {
+  const got = awardSpeak('english', idx);
+  const card = document.querySelector('.sent[data-sent="' + idx + '"]');
+  closePractice();
+  if (card) card.classList.add('done');
+  if (got) {
+    fx('🏅 +1', btn || card);
+    if (card) card.classList.add('done');
+  } else {
+    toast('오늘은 이미 도장을 받은 문장이에요 👍');
+  }
+  renderTopbar();
+  if (view === 'home') renderHome();
+  if (view === 'board') renderBoard();
+}
+
+/* ─────────────────────────── 15. 이벤트 ─────────────────────────── */
+
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action]');
+  if (!el) {
+    // 모달 바깥 클릭 닫기
+    if (e.target.id === 'modalWrap') closeModal();
+    return;
+  }
+  const a = el.dataset.action;
+
+  switch (a) {
+    case 'go':
+      showView(el.dataset.view);
+      break;
+
+    case 'back':
+      showView(subjectFrom);
+      break;
+
+    case 'pick-profile':
+      if (state.activeId !== el.dataset.id) {
+        state.activeId = el.dataset.id;
+        persist();
+        refreshCurrent();
+      }
+      break;
+
+    case 'open-subject':
+      openSubject(el.dataset.id);
+      break;
+
+    case 'subtab':
+      subjectTab = el.dataset.tab;
+      if (subjectTab === 'quiz') quiz = { i: 0, picked: null, feedback: null };
+      renderSubject();
+      break;
+
+    case 'answer': {
+      if (quiz.picked !== null) break;
+      const sub = SUBJECT_BY_ID[currentSubjectId];
+      const q = sub.quiz[quiz.i];
+      const pick = Number(el.dataset.i);
+      quiz.picked = pick;
+      quiz.feedback = pick === q.ans;
+      if (quiz.feedback) {
+        const got = awardQuiz(sub.id, quiz.i);
+        if (got) fx('🏅 +1', el);
+        else toast('오늘 이미 받은 도장이에요 👍');
+      }
+      renderSubject();
+      break;
+    }
+
+    case 'next-q':
+      quiz.i++;
+      quiz.picked = null;
+      quiz.feedback = null;
+      renderSubject();
+      renderTopbar();
+      break;
+
+    case 'retry-quiz':
+      quiz = { i: 0, picked: null, feedback: null };
+      renderSubject();
+      break;
+
+    case 'step':
+      engStep = el.dataset.step === 'all' ? 'all' : Number(el.dataset.step);
+      renderSubject();
+      break;
+
+    case 'rate': {
+      const r = Number(el.dataset.rate);
+      state.settings.rate = r;
+      persist();
+      toast(r === 0.8 ? '천천히 모드 🐢 (0.8배속)' : '보통 모드 🔊 (1.0배속)');
+      if (view === 'subject' && currentSubjectId === 'english' && subjectTab === 'learn') renderSubject();
+      if (view === 'settings') renderSettings();
+      break;
+    }
+
+    case 'say-sentence':
+      speakOne(Number(el.dataset.idx));
+      break;
+
+    case 'say':
+      speakOne(Number(el.dataset.idx));
+      break;
+
+    case 'play-step': {
+      const list = currentStepSentences().map(s => s.idx);
+      playSequence(list, state.settings.rate || 1);
+      toast('이어서 들려줄게요 ▶️');
+      break;
+    }
+
+    case 'play-all':
+      playSequence(ALL_SENTENCES.map(s => s.idx), state.settings.rate || 1);
+      toast('15문장 전체 듣기 🎧');
+      break;
+
+    case 'stop-play':
+      stopSpeech();
+      break;
+
+    case 'practice':
+      openPractice(Number(el.dataset.idx));
+      break;
+
+    case 'practice-again':
+      openPractice(Number(el.dataset.idx));
+      break;
+
+    case 'practice-stop':
+      if (practice.rec) { try { practice.rec.stop(); } catch (e) {} }
+      break;
+
+    case 'give-stamp':
+      giveStamp(Number(el.dataset.idx), el);
+      break;
+
+    case 'copy-board':
+      copyBoard(el);
+      break;
+
+    case 'close-modal':
+      closeModal();
+      break;
+
+    case 'select-copy': {
+      const ta = $('#modalWrap textarea');
+      if (ta) { ta.focus(); ta.select(); }
+      toast('전체 선택했어요. 복사를 눌러 주세요');
+      break;
+    }
+
+    case 'reset-today': {
+      if (!window.confirm('오늘 기록한 도장을 모두 지울까요? 되돌릴 수 없어요.')) break;
+      state.profiles.forEach(p => {
+        const d = dayRec(p.id, todayKey());
+        if (d) delete state.progress[p.id][todayKey()];
+      });
+      persist(); refreshCurrent();
+      toast('오늘 기록을 지웠어요');
+      break;
+    }
+
+    case 'reset-all': {
+      if (!window.confirm('모든 기록을 지울까요? 이름 설정은 그대로 두고 도장 기록만 지워요.')) break;
+      state.progress = {};
+      persist(); refreshCurrent();
+      toast('전체 기록을 지웠어요');
+      break;
+    }
+  }
+});
+
+document.addEventListener('input', (e) => {
+  const el = e.target.closest('[data-action="edit-name"]');
+  if (!el) return;
+  const p = state.profiles.find(x => x.id === el.dataset.id);
+  if (!p) return;
+  p.name = el.value.trim() || '친구';
+  persist();
+  renderFriendStrip();
+});
+
+document.addEventListener('change', (e) => {
+  const el = e.target.closest('[data-action="edit-emoji"]');
+  if (!el) return;
+  const p = state.profiles.find(x => x.id === el.dataset.id);
+  if (!p) return;
+  p.emoji = el.value;
+  persist();
+  renderSettings();
+  renderFriendStrip();
+});
+
+function closeModal() {
+  const wrap = $('#modalWrap');
+  wrap.hidden = true;
+  wrap.innerHTML = '';
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { closeModal(); closePractice(); stopSpeech(); }
+});
+
+/* ─────────────────────────── 16. 시작 ─────────────────────────── */
+
+function mergeLoaded(loaded) {
+  if (!loaded) return;
+  if (Array.isArray(loaded.profiles) && loaded.profiles.length === 5) {
+    state.profiles = loaded.profiles.map((p, i) => ({
+      id: p.id || DEFAULT_PROFILES[i].id,
+      name: (p.name || DEFAULT_PROFILES[i].name).slice(0, 8),
+      emoji: p.emoji || DEFAULT_PROFILES[i].emoji
+    }));
+  }
+  if (loaded.activeId && state.profiles.some(p => p.id === loaded.activeId)) state.activeId = loaded.activeId;
+  if (loaded.progress && typeof loaded.progress === 'object') state.progress = loaded.progress;
+  if (loaded.settings && typeof loaded.settings === 'object') {
+    state.settings.rate = loaded.settings.rate === 0.8 ? 0.8 : 1;
+  }
+}
+
+async function init() {
+  const loaded = await SyncAdapter.load();
+  mergeLoaded(loaded);
+
+  // PWA 연결은 http(s)에서만 (파일로 열 때 오류 없이 동작하도록)
+  if (/^https?:$/.test(location.protocol)) {
+    try {
+      const link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = './manifest.webmanifest';
+      document.head.appendChild(link);
+    } catch (e) {}
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+  }
+
+  showView('home');
+
+  // 다른 폰의 변경을 받는 자리 (지금 어댑터는 no-op)
+  SyncAdapter.subscribe(() => {
+    SyncAdapter.load().then(l => { mergeLoaded(l); refreshCurrent(); });
+  });
+}
+
+init();
+</script>
+</body>
+</html>
