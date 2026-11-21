@@ -19,14 +19,12 @@
   if (u) f.src = u;
   var to = p.get('to');
   if (to) {
-    f.addEventListener('load', function () {
-      setTimeout(function () {
-        try {
-          var el = f.contentWindow.document.querySelector(to);
-          if (el) el.scrollIntoView({ block: p.get('block') || 'center' });
-        } catch (e) {}
-      }, 400);
-    });
+    setInterval(function () {
+      try {
+        var el = f.contentWindow.document.querySelector(to);
+        if (el) el.scrollIntoView({ block: p.get('block') || 'center' });
+      } catch (e) {}
+    }, 700);
   }
 </script>
 </body>
