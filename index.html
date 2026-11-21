@@ -663,7 +663,7 @@ function dailyIndex(sub, d) {
   if (!b.length) return 0;
   return (dayNumber(d) + (sub.rot || 0)) % b.length;
 }
-function dailyItem(sub, d) { const b = bankOf(sub); return b.length ? b[dailyIndex(sub, d)] : null; }
+function dailyItem(sub, d) { return (sub.quiz && sub.quiz.length) ? sub.quiz[dailyIndex(sub, d)] : null; }
 function dailySentIdx(d) { return (dayNumber(d) * 7 + 3) % ALL_SENTENCES.length; }
 
 /* 기존 퀴즈 배열을 '검증된 영상 퀴즈'로 교체 (영상 1편 = 문제 1개) */
