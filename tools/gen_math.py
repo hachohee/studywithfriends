@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
-"""초2 수학 문제 은행(연산/사고력/서술형)을 만들어 index.html 의 MATH_BANK 블록에 넣는다.
+"""초1 2학기 수학 문제 은행(연산/사고력/서술형)을 만들어 index.html 의 MATH_BANK 블록에 넣는다.
+
+   범위(초1 2학기) — 곱셈구구는 넣지 않는다.
+     연산  ① 받아올림 없는 (두 자리)+(한 자리)·(두 자리)+(두 자리)
+           ② 받아내림 없는 (두 자리)−(한 자리)·(두 자리)−(두 자리)
+           ③ 받아올림 있는 (한 자리)+(한 자리) — 10 만들어 더하기
+           ④ 받아내림 있는 (십몇)−(한 자리) — 10에서 빼기
+           ⑤ 한 자리 수 세 수의 덧셈·뺄셈(결과는 양수)
+           ⑥ 쉬운 □ 구하기
+     사고력 수 규칙(1·2·5·10씩), 시각(몇 시·몇 시 30분), 어떤 수 거꾸로 구하기,
+            작은 수 줄 서기, 수 카드 두 장으로 가장 큰/작은 두 자리 수
+     서술형 위 연산 범위 안의 친근한 문장제
+
    실행: python tools/gen_math.py   (같은 시드라 다시 실행해도 같은 결과 — 도장 번호가 바뀌지 않음)
    은행 크기를 늘리면 뒤에 새 문제가 붙고 앞 번호는 유지된다."""
 import json, os, random, re, sys
@@ -24,120 +36,326 @@ def iga(n): return '이' if has_batchim(n) else '가'
 
 def make(rng, q, ans, why, kind, unit='', wrong=()):
     """보기 3개(정답 포함, 위치는 무작위). wrong = 헷갈리기 쉬운 오답 후보(예: 연산을 잘못한 값)."""
-    cands = [w for w in wrong if w != ans and w > 0]
-    for d in (1, -1, 10, -10, 2, -2):
-        if ans + d > 0 and ans + d not in cands:
-            cands.append(ans + d)
+    cands = []
+    for w in list(wrong) + [ans + d for d in (1, -1, 10, -10, 2, -2)]:
+        if 0 < w <= 99 and w != ans and w not in cands:
+            cands.append(w)
     picks = [ans] + cands[:2]
     rng.shuffle(picks)
     return {'kind': kind, 'q': q, 'opts': [f'{v}{unit}' for v in picks], 'ans': picks.index(ans), 'why': why}
 
 
+def make_text(rng, q, ans, wrongs, why, kind):
+    """보기가 숫자가 아니라 글자일 때(시각 등)."""
+    uniq = [ans]
+    for w in wrongs:
+        if w != ans and w not in uniq:
+            uniq.append(w)
+    if len(uniq) < 3:
+        raise ValueError('보기가 3개가 안 됩니다: ' + q)
+    picks = uniq[:3]
+    rng.shuffle(picks)
+    return {'kind': kind, 'q': q, 'opts': picks, 'ans': picks.index(ans), 'why': why}
+
+
+def tstr(h, m):
+    """몇 시 몇 분 (12시간제, 0시는 12시로)"""
+    h = ((h - 1) % 12) + 1
+    return f'{h}시 {m}분' if m else f'{h}시'
+
+
+# ── 수 만들기 도우미 (받아올림·받아내림 없음) ──
+def plus_two_one(rng):
+    th, on = rng.randint(1, 8), rng.randint(1, 7)
+    return th * 10 + on, rng.randint(2, 9 - on)
+
+
+def plus_two_two(rng):
+    ah, ao = rng.randint(1, 8), rng.randint(0, 9)
+    bh, bo = rng.randint(1, 9 - ah), rng.randint(0, 9 - ao)
+    return ah * 10 + ao, bh * 10 + bo
+
+
+def minus_two_one(rng):
+    th, on = rng.randint(2, 8), rng.randint(3, 9)
+    return th * 10 + on, rng.randint(2, on)
+
+
+def minus_two_two(rng):
+    ah, ao = rng.randint(3, 9), rng.randint(0, 9)
+    bh = rng.randint(1, ah - 1)
+    return ah * 10 + ao, bh * 10 + rng.randint(0, ao)
+
+
 # ── 연산 ──
-def calc(rng, i):
-    t = i % 6
-    if t == 0:    # 두 자리 + 두 자리 (받아올림 포함)
-        a = rng.randint(14, 78); b = rng.randint(11, 99 - a)
-        return make(rng, f'{a} + {b} = ?', a + b, f'{a}+{b}={a + b}. 일의 자리끼리 먼저 더하고, 10이 넘으면 십의 자리로 올려요.', '연산', wrong=[a + b + 10, a + b - 10])
-    if t == 1:    # 두 자리 − 두 자리 (받아내림 포함)
-        a = rng.randint(32, 95); b = rng.randint(11, a - 10)
-        return make(rng, f'{a} − {b} = ?', a - b, f'{a}−{b}={a - b}. 일의 자리가 모자라면 십의 자리에서 10을 빌려와요.', '연산', wrong=[a - b + 10, a - b - 10])
-    if t == 2:    # 곱셈구구
-        m, n = rng.randint(2, 9), rng.randint(2, 9)
-        return make(rng, f'{m} × {n} = ?', m * n, f'{m}×{n}={m * n}. {m}씩 {n}번 더한 것과 같아요.', '연산', wrong=[m + n, m * (n + 1)])
-    if t == 3:    # 세 수 계산
-        a = rng.randint(30, 80); b = rng.randint(11, 25); c = rng.randint(5, 20)
-        if rng.random() < .5:
-            return make(rng, f'{a} + {b} − {c} = ?', a + b - c, f'앞에서부터 차례로: {a}+{b}={a + b}, {a + b}−{c}={a + b - c}.', '연산', wrong=[a + b + c, a - b - c])
-        return make(rng, f'{a} − {b} + {c} = ?', a - b + c, f'앞에서부터 차례로: {a}−{b}={a - b}, {a - b}+{c}={a - b + c}.', '연산', wrong=[a - b - c, a + b + c])
-    if t == 4:    # □ 구하기
-        a = rng.randint(12, 60); b = rng.randint(a + 10, 99)
-        return make(rng, f'□ + {a} = {b}  에서 □는?', b - a, f'□ = {b}−{a} = {b - a}. 더하기의 □는 빼기로 구해요.', '연산', wrong=[b + a])
-    a = rng.randint(30, 90); b = rng.randint(10, a - 10)   # t == 5
-    return make(rng, f'{a} − □ = {a - b}  에서 □는?', b, f'□ = {a}−{a - b} = {b}.', '연산', wrong=[a + (a - b)])
+def calc(rng, t):
+    if t == 0:      # (두 자리) + (한 자리), 받아올림 없음
+        a, b = plus_two_one(rng)
+        on = a % 10
+        why = (f'{a}+{b}={a + b}. 일의 자리끼리 {on}+{b}={on + b}이고 '
+               f'십의 자리는 {a // 10} 그대로예요. 받아올림이 없어요.')
+        return make(rng, f'{a} + {b} = ?', a + b, why, '연산', wrong=[a + b + 10, a + b - 1])
+
+    if t == 1:      # (두 자리) + (두 자리), 받아올림 없음
+        a, b = plus_two_two(rng)
+        why = (f'{a}+{b}={a + b}. 십의 자리끼리 {a // 10}+{b // 10}={a // 10 + b // 10}, '
+               f'일의 자리끼리 {a % 10}+{b % 10}={a % 10 + b % 10}. 받아올림이 없어요.')
+        return make(rng, f'{a} + {b} = ?', a + b, why, '연산', wrong=[a + b + 10, a + b - 10])
+
+    if t == 2:      # (두 자리) − (한 자리), 받아내림 없음
+        a, b = minus_two_one(rng)
+        why = (f'{a}−{b}={a - b}. 일의 자리 {a % 10}에서 {b}{eul(b)} 빼면 {a % 10 - b}, '
+               f'십의 자리는 {a // 10} 그대로예요.')
+        return make(rng, f'{a} − {b} = ?', a - b, why, '연산', wrong=[a - b + 10, a - b - 1])
+
+    if t == 3:      # (두 자리) − (두 자리), 받아내림 없음
+        a, b = minus_two_two(rng)
+        why = (f'{a}−{b}={a - b}. 십의 자리끼리 {a // 10}−{b // 10}={a // 10 - b // 10}, '
+               f'일의 자리끼리 {a % 10}−{b % 10}={a % 10 - b % 10}. 받아내림이 없어요.')
+        return make(rng, f'{a} − {b} = ?', a - b, why, '연산', wrong=[a - b + 10, a - b - 10])
+
+    if t == 4:      # (한 자리) + (한 자리), 받아올림 — 10 만들어 더하기
+        a = rng.randint(5, 9)
+        b = rng.randint(11 - a, 9)
+        need, rest = 10 - a, b - (10 - a)
+        why = (f'{a}+{b}={a + b}. {a}에 {need}{eul(need)} 더하면 10이에요. '
+               f'{b}에서 {need}{eul(need)} 떼어 10을 만들고, 남은 {rest}{eul(rest)} 더하면 10+{rest}={a + b}.')
+        return make(rng, f'{a} + {b} = ?', a + b, why, '연산', wrong=[a + b - 10, a + b + 1])
+
+    if t == 5:      # (십몇) − (한 자리), 받아내림 — 10에서 빼기
+        on = rng.randint(1, 8)
+        a, b = 10 + on, rng.randint(on + 1, 9)
+        why = (f'{a}−{b}={a - b}. 먼저 10−{b}={10 - b}, '
+               f'여기에 남은 {on}{eul(on)} 더하면 {10 - b}+{on}={a - b}.')
+        return make(rng, f'{a} − {b} = ?', a - b, why, '연산', wrong=[b - on, 10 - b])
+
+    if t == 6:      # 한 자리 수 세 수
+        form = rng.choice(['++', '+-', '-+', '--', '10--'])
+        if form == '++':
+            a, b, c = rng.randint(2, 6), rng.randint(2, 6), rng.randint(2, 6)
+            q, ans = f'{a} + {b} + {c} = ?', a + b + c
+            why = f'앞에서부터 차례로: {a}+{b}={a + b}, {a + b}+{c}={ans}.'
+        elif form == '+-':
+            a = rng.randint(5, 9); b = rng.randint(2, 4); c = rng.randint(2, 5)
+            q, ans = f'{a} − {b} + {c} = ?', a - b + c
+            why = f'앞에서부터 차례로: {a}−{b}={a - b}, {a - b}+{c}={ans}.'
+        elif form == '-+':
+            a = rng.randint(6, 9); b = rng.randint(2, 4); c = rng.randint(2, 5)
+            q, ans = f'{a} − {b} + {c} = ?', a - b + c
+            why = f'앞에서부터 차례로: {a}−{b}={a - b}, {a - b}+{c}={ans}.'
+        elif form == '--':
+            b = rng.randint(2, 4); c = rng.randint(2, 3)
+            a = b + c + rng.randint(1, 4)
+            q, ans = f'{a} − {b} − {c} = ?', a - b - c
+            why = f'앞에서부터 차례로: {a}−{b}={a - b}, {a - b}−{c}={ans}.'
+        else:
+            b = rng.randint(2, 4); c = rng.randint(2, 9 - b)
+            q, ans = f'10 − {b} − {c} = ?', 10 - b - c
+            why = f'앞에서부터 차례로: 10−{b}={10 - b}, {10 - b}−{c}={ans}.'
+        return make(rng, q, ans, why, '연산', wrong=[ans + 10, ans - 2])
+
+    # t == 7: 쉬운 □ 구하기
+    form = rng.choice(['plus', 'minus', 'front'])
+    if form == 'plus':          # □ + a = b
+        a = rng.randint(2, 8); b = rng.randint(max(11, a + 3), 18)
+        q, ans = f'□ + {a} = {b}  에서 □는?', b - a
+        why = f'□ = {b}−{a} = {ans}. 더한 수를 구할 때는 빼요.'
+    elif form == 'minus':       # a − □ = b
+        b = rng.randint(2, 8); a = rng.randint(max(11, b + 2), 19)
+        q, ans = f'{a} − □ = {b}  에서 □는?', a - b
+        why = f'□ = {a}−{b} = {ans}.'
+    else:                       # □ − a = b
+        a = rng.randint(2, 9); b = rng.randint(2, 9)
+        q, ans = f'□ − {a} = {b}  에서 □는?', a + b
+        why = f'□ = {a}+{b} = {ans}. 뺀 수를 구할 때는 더해요.'
+    return make(rng, q, ans, why, '연산', wrong=[ans + 1, ans - 1])
 
 
 # ── 사고력 ──
-def think(rng, i):
-    t = i % 7
-    if t in (0, 1):   # 규칙 찾기 (늘어남/줄어듦)
-        d = rng.randint(2, 9); up = (t == 0)
-        s = rng.randint(1, 20) if up else rng.randint(40, 70)
-        seq = [s + (k if up else -k) * d for k in range(5)]
-        word = '씩 커지는' if up else '씩 작아지는'
-        return make(rng, f'규칙을 찾아 □에 알맞은 수는?  {", ".join(map(str, seq[:4]))}, □', seq[4],
-                    f'{d}{word} 규칙이에요. {seq[3]} 다음은 {seq[3]}{"+" if up else "−"}{d}={seq[4]}!', '사고력', wrong=[seq[3] + (d + 1 if up else -(d + 1))])
-    if t == 2:    # 어떤 수 거꾸로 (더하기)
-        x = rng.randint(10, 60); k = rng.randint(5, 30)
-        return make(rng, f'어떤 수에 {k}{eul(k)} 더했더니 {x + k}{iga(x + k)} 되었어요. 어떤 수는?', x, f'거꾸로 생각해요. {x + k}−{k}={x}.', '사고력', wrong=[x + 2 * k])
-    if t == 3:    # 어떤 수 거꾸로 (빼기)
-        x = rng.randint(30, 90); k = rng.randint(5, 25)
-        return make(rng, f'어떤 수에서 {k}{eul(k)} 뺐더니 {x - k}{iga(x - k)} 되었어요. 어떤 수는?', x, f'거꾸로 생각해요. {x - k}+{k}={x}.', '사고력', wrong=[x - 2 * k])
-    if t == 4:    # 줄 서기
-        a, b = rng.randint(3, 9), rng.randint(3, 9)
-        return make(rng, f'줄을 섰어요. 민지는 앞에서 {a}번째, 뒤에서 {b}번째예요. 모두 몇 명일까요?', a + b - 1, f'민지가 두 번 세어졌어요! {a}+{b}−1={a + b - 1}(명).', '사고력', '명', wrong=[a + b])
-    if t == 5:    # 수 카드로 가장 큰 수
-        ds = rng.sample(range(1, 10), 3)
-        big = int(''.join(map(str, sorted(ds, reverse=True)[:2])))
-        return make(rng, f'수 카드 {ds[0]}, {ds[1]}, {ds[2]} 중 두 장으로 만들 수 있는 가장 큰 두 자리 수는?', big,
-                    f'큰 수를 십의 자리에 놓아요. 십의 자리 {sorted(ds, reverse=True)[0]}, 일의 자리 {sorted(ds, reverse=True)[1]} → {big}!', '사고력',
-                    wrong=[int(''.join(map(str, sorted(ds)[:2][::-1])))])
-    a = rng.randint(10, 30); b = rng.randint(a + 5, 50); c = rng.randint(5, 20)   # t == 6: 양쪽이 같은 식
-    return make(rng, f'□ + {a} = {b} + {c}  에서 □는?', b + c - a, f'오른쪽은 {b}+{c}={b + c}. □ = {b + c}−{a} = {b + c - a}.', '사고력', wrong=[b + c + a])
+def think(rng, t):
+    if t == 0:      # 수 규칙 찾기 — 1·2·5·10씩 커지거나 작아지기
+        d = rng.choice([1, 2, 5, 10])
+        up = rng.random() < .55
+        if up:
+            s = rng.randint(1, 99 - 4 * d)
+            seq = [s + k * d for k in range(5)]
+            why = f'{d}씩 커지는 규칙이에요. {seq[3]}+{d}={seq[4]}!'
+            wrong = [seq[4] - d, seq[3]]
+        else:
+            s = rng.randint(4 * d + 1, min(99, 4 * d + 40))
+            seq = [s - k * d for k in range(5)]
+            why = f'{d}씩 작아지는 규칙이에요. {seq[3]}−{d}={seq[4]}!'
+            wrong = [seq[4] + d, seq[3]]
+        return make(rng, f'규칙을 찾아 □에 알맞은 수는?  {", ".join(map(str, seq[:4]))}, □',
+                    seq[4], why, '사고력', wrong=wrong)
+
+    if t == 1:      # 시각 — 몇 시 · 몇 시 30분
+        form = rng.choice(['hour', 'hour30', 'half', 'half30', 'read'])
+        if form == 'hour':
+            h, k = rng.randint(2, 8), rng.randint(1, 3)
+            q, ans = f'지금은 {h}시예요. {k}시간 뒤는 몇 시일까요?', tstr(h + k, 0)
+            wrongs = [tstr(h, 0), tstr(h + k + 1, 0), tstr(h + k - 1, 0)]
+            why = f'{h}시에서 {k}시간 지나면 {h}+{k}={h + k}시예요.'
+        elif form == 'hour30':
+            h = rng.randint(2, 9)
+            q, ans = f'지금은 {h}시 30분이에요. 1시간 뒤는 몇 시 몇 분일까요?', tstr(h + 1, 30)
+            wrongs = [tstr(h, 30), tstr(h + 2, 30), tstr(h + 1, 0)]
+            why = f'{h}시 30분에서 1시간 지나면 {h + 1}시 30분이에요. 분은 그대로예요.'
+        elif form == 'half':
+            h = rng.randint(2, 9)
+            q, ans = f'지금은 {h}시예요. 30분 뒤는 몇 시 몇 분일까요?', tstr(h, 30)
+            wrongs = [tstr(h + 1, 0), tstr(h, 0), tstr(h + 1, 30)]
+            why = f'{h}시에서 30분 지나면 {h}시 30분이에요.'
+        elif form == 'half30':
+            h = rng.randint(2, 9)
+            q, ans = f'지금은 {h}시 30분이에요. 30분 뒤는 몇 시 몇 분일까요?', tstr(h + 1, 0)
+            wrongs = [tstr(h, 30), tstr(h + 1, 30), tstr(h, 0)]
+            why = f'{h}시 30분에서 30분 지나면 {h + 1}시가 돼요. 분이 0이 되면 정각이에요.'
+        else:
+            h = rng.randint(1, 9)
+            q, ans = f'짧은바늘이 {h}를 가리키고 있어요. 몇 시일까요?', tstr(h, 0)
+            wrongs = [tstr(h + 1, 0), tstr(h - 1, 0), tstr(h, 30)]
+            why = f'짧은바늘은 시를 가리켜요. {h}를 가리키면 {h}시예요.'
+        return make_text(rng, q, ans, wrongs, why, '사고력')
+
+    if t == 2:      # 어떤 수 거꾸로 구하기 (한 자리·십몇 범위)
+        if rng.random() < .5:
+            x = rng.randint(2, 9)
+            k = rng.randint(max(2, 11 - x), 9)
+            total = x + k
+            q = f'어떤 수에 {k}{eul(k)} 더했더니 {total}{iga(total)} 되었어요. 어떤 수는?'
+            why = f'거꾸로 생각해요. {total}−{k}={x}.'
+            return make(rng, q, x, why, '사고력', wrong=[x + 2 * k, total + k])
+        k = rng.randint(2, 6); x = rng.randint(k + 3, 19)
+        q = f'어떤 수에서 {k}{eul(k)} 뺐더니 {x - k}{iga(x - k)} 되었어요. 어떤 수는?'
+        why = f'거꾸로 생각해요. {x - k}+{k}={x}.'
+        return make(rng, q, x, why, '사고력', wrong=[x - 2 * k, x + k])
+
+    if t == 3:      # 작은 수 줄 서기
+        nm, eun, ga = rng.choice(NAMES)
+        a, b = rng.randint(2, 7), rng.randint(2, 7)
+        q = f'줄을 섰어요. {nm}{eun} 앞에서 {a}번째, 뒤에서 {b}번째예요. 모두 몇 명일까요?'
+        why = f'{nm}{ga} 두 번 세어졌어요! {a}+{b}−1={a + b - 1}(명).'
+        return make(rng, q, a + b - 1, why, '사고력', '명', wrong=[a + b, a + b - 2])
+
+    # t == 4: 수 카드 두 장으로 가장 큰/작은 두 자리 수
+    ds = rng.sample(range(1, 10), 3)
+    srt = sorted(ds)
+    big = srt[-1] * 10 + srt[-2]
+    small = srt[0] * 10 + srt[1]
+    if rng.random() < .5:
+        q = f'수 카드 {ds[0]}, {ds[1]}, {ds[2]} 중 두 장으로 만들 수 있는 가장 큰 두 자리 수는?'
+        why = f'큰 수를 십의 자리에 놓아요. 십의 자리 {srt[-1]}, 일의 자리 {srt[-2]} → {big}!'
+        return make(rng, q, big, why, '사고력', wrong=[small, srt[0] * 10 + srt[-1]])
+    q = f'수 카드 {ds[0]}, {ds[1]}, {ds[2]} 중 두 장으로 만들 수 있는 가장 작은 두 자리 수는?'
+    why = f'작은 수를 십의 자리에 놓아요. 십의 자리 {srt[0]}, 일의 자리 {srt[1]} → {small}!'
+    return make(rng, q, small, why, '사고력', wrong=[big, srt[0] * 10 + srt[-1]])
 
 
 # ── 서술형 ──
-def word(rng, i):
-    t = i % 8
-    n, o = rng.choice(NAMES), rng.choice(OBJS)
-    nm, eun, ga = n; ob, oga, oeul, u, ueul = o
-    if t == 0:
-        a, b = rng.randint(12, 45), rng.randint(10, 40)
-        return make(rng, f'{nm}{eun} {ob}{oeul} {a}{u} 가지고 있고, 동생은 {b}{u}{ueul} 가지고 있어요. 둘이 가진 것은 모두 몇 {u}일까요?',
-                    a + b, f'합치는 문제예요. 식: {a}+{b}={a + b}, 답: {a + b}{u}', '서술형', u, wrong=[abs(a - b)])
-    if t == 1:
-        a = rng.randint(25, 60); b = rng.randint(8, 20)
-        return make(rng, f'{nm}{eun} {ob}{oeul} {a}{u} 가지고 있었어요. 친구에게 {b}{u}{ueul} 주었어요. 남은 것은 몇 {u}일까요?',
-                    a - b, f'덜어내는 문제예요. 식: {a}−{b}={a - b}, 답: {a - b}{u}', '서술형', u, wrong=[a + b])
-    if t == 2:
-        m, k = rng.randint(2, 9), rng.randint(2, 9)
-        return make(rng, f'{ob}{oga} 한 봉지에 {m}{u}씩 {k}봉지 있어요. 모두 몇 {u}일까요?',
-                    m * k, f'{m}씩 {k}묶음이니까 곱셈! 식: {m}×{k}={m * k}, 답: {m * k}{u}', '서술형', u, wrong=[m + k])
-    if t == 3:
-        a = rng.randint(25, 60); b = rng.randint(10, a - 8)
-        return make(rng, f'{nm}{eun} {ob}{oeul} {a}{u}, 동생은 {b}{u}{ueul} 가지고 있어요. {nm}{ga} 동생보다 몇 {u} 더 많을까요?',
-                    a - b, f'차이를 구하는 문제예요. 식: {a}−{b}={a - b}, 답: {a - b}{u}', '서술형', u, wrong=[a + b])
-    if t == 4:
-        a = rng.randint(30, 60); b = rng.randint(8, 20); c = rng.randint(5, 20)
-        return make(rng, f'{nm}{eun} {ob}{oeul} {a}{u} 가지고 있었어요. 친구에게 {b}{u}{ueul} 주고, 엄마께 {c}{u}{ueul} 더 받았어요. 지금은 모두 몇 {u}일까요?',
-                    a - b + c, f'차례로 계산해요. 식: {a}−{b}+{c}={a - b + c}, 답: {a - b + c}{u}', '서술형', u, wrong=[a - b - c, a + b + c])
-    if t == 5:
-        a, b, c = rng.randint(15, 40), rng.randint(5, 14), rng.randint(5, 20)
-        return make(rng, f'버스에 {a}명이 타고 있었어요. 정류장에서 {b}명이 내리고 {c}명이 탔어요. 지금 버스에 탄 사람은 몇 명일까요?',
-                    a - b + c, f'식: {a}−{b}+{c}={a - b + c}, 답: {a - b + c}명', '서술형', '명', wrong=[a + b + c, a - b - c])
-    if t == 6:
-        a, d = rng.randint(2, 9), rng.randint(2, 9)
-        return make(rng, f'{nm}{eun} 하루에 동화책을 {a}쪽씩 읽어요. {d}일 동안 읽으면 모두 몇 쪽일까요?',
-                    a * d, f'같은 수를 {d}번 더하니까 곱셈! 식: {a}×{d}={a * d}, 답: {a * d}쪽', '서술형', '쪽', wrong=[a + d])
-    a, b = rng.randint(30, 60), rng.randint(15, 40)   # t == 7
-    return make(rng, f'어제 줄넘기를 {a}번, 오늘은 {b}번 했어요. 이틀 동안 줄넘기를 모두 몇 번 했을까요?',
-                a + b, f'식: {a}+{b}={a + b}, 답: {a + b}번', '서술형', '번', wrong=[abs(a - b)])
+_NAME_I = [0]    # 한날 문제끼리 이름이 겹치지 않게 차례로 돌려 쓴다
+
+
+def word(rng, t):
+    nm, eun, ga = NAMES[_NAME_I[0] % len(NAMES)]
+    _NAME_I[0] += 1
+    ob, oga, oeul, u, ueul = rng.choice(OBJS)
+
+    if t == 0:      # 합치기 — (두 자리)+(한 자리)
+        a, b = plus_two_one(rng)
+        q = f'{nm}{eun} {ob}{oeul} {a}{u} 가지고 있고, 동생은 {b}{u}{ueul} 가지고 있어요. 둘이 가진 것은 모두 몇 {u}일까요?'
+        return make(rng, q, a + b, f'합치는 문제예요. 식: {a}+{b}={a + b}, 답: {a + b}{u}', '서술형', u, wrong=[abs(a - b)])
+
+    if t == 1:      # 합치기 — (두 자리)+(두 자리)
+        a, b = plus_two_two(rng)
+        q = f'{nm}{eun} 어제 동화책을 {a}쪽 읽고, 오늘은 {b}쪽 읽었어요. 이틀 동안 모두 몇 쪽 읽었을까요?'
+        return make(rng, q, a + b, f'합치는 문제예요. 식: {a}+{b}={a + b}, 답: {a + b}쪽', '서술형', '쪽', wrong=[abs(a - b)])
+
+    if t == 2:      # 덜어내기 — (두 자리)−(한 자리)
+        a, b = minus_two_one(rng)
+        q = f'{nm}{eun} {ob}{oeul} {a}{u} 가지고 있었어요. 동생에게 {b}{u}{ueul} 주었어요. 남은 것은 몇 {u}일까요?'
+        return make(rng, q, a - b, f'덜어내는 문제예요. 식: {a}−{b}={a - b}, 답: {a - b}{u}', '서술형', u)
+
+    if t == 3:      # 덜어내기 — (두 자리)−(두 자리)
+        a, b = minus_two_two(rng)
+        q = f'{nm}{eun} {ob}{oeul} {a}{u} 모았어요. 그중 {b}{u}{ueul} 동생에게 주었어요. 남은 것은 몇 {u}일까요?'
+        return make(rng, q, a - b, f'덜어내는 문제예요. 식: {a}−{b}={a - b}, 답: {a - b}{u}', '서술형', u)
+
+    if t == 4:      # 몇 개 더 많은지 (차이)
+        a, b = minus_two_two(rng)
+        q = f'{nm}{eun} {ob}{oeul} {a}{u}, 동생은 {b}{u}{ueul} 가지고 있어요. {nm}{ga} 동생보다 몇 {u} 더 많을까요?'
+        return make(rng, q, a - b, f'차이를 구하는 문제예요. 식: {a}−{b}={a - b}, 답: {a - b}{u}', '서술형', u,
+                    wrong=[a + b] if a + b <= 99 else [])
+
+    if t == 5:      # 10 만들어 더하기 (한 자리 + 한 자리)
+        a = rng.randint(5, 9); b = rng.randint(11 - a, 9)
+        who = rng.choice(['엄마', '아빠', '할머니'])
+        q = f'{nm}{eun} {ob}{oeul} {a}{u} 가지고 있어요. {who}께서 {b}{u}{ueul} 더 주셨어요. 모두 몇 {u}일까요?'
+        return make(rng, q, a + b, f'10을 만들어 더해요. {a}+{b}={a + b}, 답: {a + b}{u}', '서술형', u, wrong=[a + b - 10])
+
+    if t == 6:      # 10에서 빼기 (십몇 − 한 자리)
+        on = rng.randint(1, 8); a = 10 + on; b = rng.randint(on + 1, 9)
+        q = f'{nm}{eun} {ob}{oeul} {a}{u} 가지고 있었어요. 친구에게 {b}{u}{ueul} 주었어요. 남은 것은 몇 {u}일까요?'
+        return make(rng, q, a - b, f'10에서 빼요. {a}−{b}={a - b}, 답: {a - b}{u}', '서술형', u, wrong=[b - on])
+
+    if t == 7:      # 세 수 (한 자리)
+        a = rng.randint(6, 9); b = rng.randint(2, 3)
+        c = rng.choice([x for x in range(2, 6) if x != b])
+        q = f'{nm}{eun} {ob}{oeul} {a}{u} 가지고 있었어요. 동생에게 {b}{u}{ueul} 주고, 엄마께 {c}{u}{ueul} 더 받았어요. 지금은 모두 몇 {u}일까요?'
+        return make(rng, q, a - b + c, f'차례로 계산해요. 식: {a}−{b}+{c}={a - b + c}, 답: {a - b + c}{u}', '서술형', u,
+                    wrong=[a - b - c])
+
+    # t == 8: 몇 개 더 있어야 하는지 (10이 되는 수)
+    need = rng.choice([9, 10]); have = rng.randint(2, need - 3)
+    q = f'{nm}{eun} {ob} {need}{u}{ueul} 사려고 해요. 지금 {have}{u}{ueul} 가지고 있어요. 몇 {u} 더 사야 할까요?'
+    return make(rng, q, need - have, f'모자란 만큼 더 사요. 식: {need}−{have}={need - have}, 답: {need - have}{u}', '서술형', u,
+                wrong=[need + have])
+
+
+# ── 은행 만들기 ──
+QUOTA_CALC = {0: 18, 1: 20, 2: 18, 3: 16, 4: 20, 5: 20, 6: 14, 7: 14}   # 합 140
+QUOTA_THINK = {0: 9, 1: 9, 2: 9, 3: 9, 4: 9}                            # 합 45
+QUOTA_WORD = {t: 5 for t in range(9)}                                    # 합 45
+
+
+def fill(rng, fn, quota, seen):
+    """종류별로 quota 개씩, 서로 다른 문제를 만들어 둔다."""
+    out = {t: [] for t in quota}
+    for t, n in quota.items():
+        tries = 0
+        while len(out[t]) < n:
+            tries += 1
+            if tries > 5000:
+                sys.exit(f'!! {fn.__name__}[{t}] 문제를 {n}개 만들 수 없어요(중복).')
+            item = fn(rng, t)
+            if item['q'] in seen:
+                continue
+            seen.add(item['q'])
+            out[t].append(item)
+    return out
+
+
+def interleave(banks, order):
+    """종류가 골고루 섞이도록 한 문제씩 번갈아 붙인다(하루 5문제가 서로 다른 유형이 되도록)."""
+    out, i = [], 0
+    while any(banks[t] for t in order):
+        t = order[i % len(order)]
+        if banks[t]:
+            out.append(banks[t].pop(0))
+        i += 1
+    return out
 
 
 def build():
-    rng = random.Random(20261121)
-    out, seen = [], set()
-    for kind_fn, n in ((calc, N_CALC), (think, N_THINK), (word, N_WORD)):
-        i = 0
-        kind = {calc: '연산', think: '사고력', word: '서술형'}[kind_fn]
-        while sum(1 for x in out if x['kind'] == kind) < n:
-            if i > 20000:
-                sys.exit(f'!! {kind} 문제를 {n}개 만들 수 없어요(중복). 은행 크기를 줄이세요.')
-            item = kind_fn(rng, i); i += 1
-            if item['q'] in seen:
-                continue
-            seen.add(item['q']); out.append(item)
-    return out
+    rng = random.Random(20261122)
+    _NAME_I[0] = 0
+    seen = set()
+    calc_b = fill(rng, calc, QUOTA_CALC, seen)
+    think_b = fill(rng, think, QUOTA_THINK, seen)
+    word_b = fill(rng, word, QUOTA_WORD, seen)
+    return (interleave(calc_b, sorted(calc_b)) +
+            interleave(think_b, sorted(think_b)) +
+            interleave(word_b, sorted(word_b)))
 
 
 def main():

@@ -3,7 +3,8 @@
    실행: python3 tools/test_app.py   (통과하면 exit 0)
 
    검사 항목
-   1) gen_math.py — 연산 정답·보기 구성·조사(을/를·이/가)
+   1) gen_math.py — 연산 정답·보기 구성·조사(을/를·이/가)·초1 2학기 수준(곱셈 없음,
+      받아올림·받아내림 없는 두 자리 계산, 시각·수 카드)
    2) videos.json — 읽기 글(essay) 존재/분량/문단, 낱말(vocab), 퀴즈 정합성(정답이 글 안에 있음),
       같은 주제(영상)의 문제는 같은 글을 씀, 영상 길이 10분 이내
    3) 오늘의 문제 순환(dailyIdxs) — 날짜별 문제 수·범위·중복·시대순 진행·전체 순환
@@ -93,6 +94,21 @@ def test_math():
         m = re.match(r'^□ \+ (\d+) = (\d+) \+ (\d+)\s+에서 □는\?$', q)
         if m:
             expect(int(m.group(2)) + int(m.group(3)) - int(m.group(1)))
+        m = re.match(r'^□ − (\d+) = (\d+)\s+에서 □는\?$', q)
+        if m:
+            expect(int(m.group(1)) + int(m.group(2)))
+        # 한 자리 수 세 수
+        m = re.match(r'^(\d+) \+ (\d+) \+ (\d+) = \?$', q)
+        if m:
+            expect(int(m.group(1)) + int(m.group(2)) + int(m.group(3)))
+        m = re.match(r'^(\d+) − (\d+) − (\d+) = \?$', q)
+        if m:
+            expect(int(m.group(1)) - int(m.group(2)) - int(m.group(3)))
+        # 수 카드 두 장으로 가장 큰/작은 두 자리 수
+        m = re.match(r'^수 카드 ([\d, ]+) 중 두 장으로 만들 수 있는 가장 (큰|작은) 두 자리 수는\?$', q)
+        if m:
+            ds = sorted(int(x) for x in re.findall(r'\d+', m.group(1)))
+            expect(ds[-1] * 10 + ds[-2] if m.group(2) == '큰' else ds[0] * 10 + ds[1])
         # 규칙 찾기
         m = re.search(r'([\d, ]+), □$', q)
         if m and '규칙' in q:
@@ -114,6 +130,68 @@ def test_math():
     check(not bad_josa, 'gen_math: 숫자 뒤 조사(을/를·이/가) (%s)' % ('실패 %d건: %s' % (len(bad_josa), bad_josa[:3]) if bad_josa else '전건 통과'))
     check(kinds.get('연산', 0) >= 100 and kinds.get('사고력', 0) >= 30 and kinds.get('서술형', 0) >= 30,
           'gen_math: 종류별 구성 %s' % kinds)
+    check(kinds.get('연산', 0) == 140 and kinds.get('사고력', 0) == 45 and kinds.get('서술형', 0) == 45,
+          'gen_math: 은행 크기 유지(연산 140 · 사고력 45 · 서술형 45)')
+    test_math_time(bank)
+    test_math_level(bank)
+
+
+def tstr(h, m):
+    """몇 시 몇 분 (12시간제)"""
+    h = ((h - 1) % 12) + 1
+    return '%d시 %d분' % (h, m) if m else '%d시' % h
+
+
+def test_math_time(bank):
+    """시각 문제의 정답 확인 — 보기가 '몇 시 30분' 같은 글자라 숫자 비교로는 잡히지 않는다."""
+    bad = []
+    pats = [
+        (r'^지금은 (\d+)시예요\. (\d+)시간 뒤는 몇 시일까요\?$', lambda h, k: tstr(h + k, 0)),
+        (r'^지금은 (\d+)시 30분이에요\. 1시간 뒤는 몇 시 몇 분일까요\?$', lambda h, k=1: tstr(h + 1, 30)),
+        (r'^지금은 (\d+)시예요\. 30분 뒤는 몇 시 몇 분일까요\?$', lambda h: tstr(h, 30)),
+        (r'^지금은 (\d+)시 30분이에요\. 30분 뒤는 몇 시 몇 분일까요\?$', lambda h: tstr(h + 1, 0)),
+        (r'^짧은바늘이 (\d+)를 가리키고 있어요\. 몇 시일까요\?$', lambda h: tstr(h, 0)),
+    ]
+    n_time = 0
+    for it in bank:
+        for pat, want in pats:
+            m = re.match(pat, it['q'])
+            if m:
+                n_time += 1
+                exp = want(*[int(g) for g in m.groups()])
+                if it['opts'][it['ans']] != exp:
+                    bad.append('%s | 정답 %s (기대 %s)' % (it['q'], it['opts'][it['ans']], exp))
+                break
+    check(n_time >= 8, 'gen_math: 시각 문제 %d개' % n_time)
+    check(not bad, 'gen_math: 시각 문제 정답 일치 (%s)' % ('실패: %s' % bad[:3] if bad else '전건 통과'))
+
+
+def test_math_level(bank):
+    """초1 2학기 수준 지키기 — 곱셈 없음, 두 자리 계산은 받아올림·받아내림 없음, 99 이내."""
+    mult = [it['q'] for it in bank if '×' in it['q'] or '×' in it['why'] or any('×' in o for o in it['opts'])]
+    check(not mult, 'gen_math: 곱셈(×) 문제 없음 — 초1 2학기 (%s)' % ('실패 %d건: %s' % (len(mult), mult[:3]) if mult else '전건 통과'))
+    carry, borrow, big = [], [], []
+    for it in bank:
+        q = it['q']
+        if it['kind'] == '연산':
+            for m in re.finditer(r'(?<!\d)(\d+) \+ (\d+)(?!\d)', q):
+                a, b = int(m.group(1)), int(m.group(2))
+                if a >= 10 and b >= 10 and (a % 10 + b % 10 > 9 or a // 10 + b // 10 > 9):
+                    carry.append(q)
+                elif a >= 10 and b < 10 and a % 10 + b > 9:
+                    carry.append(q)
+            for m in re.finditer(r'(?<!\d)(\d+) − (\d+)(?!\d)', q):
+                a, b = int(m.group(1)), int(m.group(2))
+                if b >= 10 and a % 10 < b % 10:
+                    borrow.append(q)
+                elif b < 10 and 20 <= a and a % 10 < b:   # 십몇−한 자리(10에서 빼기)는 초1 2학기 범위
+                    borrow.append(q)
+        for n in re.findall(r'(?<!\d)(\d+)(?!\d)', q):
+            if int(n) > 99:
+                big.append(q)
+    check(not carry, 'gen_math: 두 자리 덧셈에 받아올림 없음 (%s)' % ('실패 %d건: %s' % (len(carry), carry[:3]) if carry else '전건 통과'))
+    check(not borrow, 'gen_math: 두 자리 뺄셈에 받아내림 없음 (%s)' % ('실패 %d건: %s' % (len(borrow), borrow[:3]) if borrow else '전건 통과'))
+    check(not big, 'gen_math: 99 이내 수만 씀 (%s)' % ('실패 %d건: %s' % (len(big), big[:3]) if big else '전건 통과'))
 
 
 # ─────────────────────────── 2. videos.json 읽기 글 ───────────────────────────
