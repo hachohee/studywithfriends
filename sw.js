@@ -1,7 +1,7 @@
 /* 우리 반 공부방 · Service Worker
    - 앱 셸은 오프라인 캐시
    - 문서(HTML)는 네트워크 우선 → 새 버전이 바로 반영되고, 오프라인이면 캐시로 동작 */
-const CACHE = 'kids-study-app-v9';
+const CACHE = 'kids-study-app-v10';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', (event) => {
