@@ -409,8 +409,8 @@ def test_index():
 
     sw = open(SW, encoding='utf-8').read()
     m_ver = re.search(r"kids-study-app-v(\d+)", sw)
-    check(m_ver is not None and int(m_ver.group(1)) >= 7,
-          'sw.js: 캐시 버전 v%s(>=7)' % (m_ver.group(1) if m_ver else '?'))
+    check(m_ver is not None and int(m_ver.group(1)) >= 12,
+          'sw.js: 캐시 버전 v%s(>=12)' % (m_ver.group(1) if m_ver else '?'))
 
     # index.html의 BANKS가 videos.json + build.py 결과와 같은지
     sys.path.insert(0, os.path.join(ROOT, 'tools'))
@@ -440,6 +440,143 @@ def test_downloads_copy(html):
     check(same, 'downloads/초1_공동학습_웹앱_틀.html: index.html과 동일')
 
 
+def parse_const(html, name):
+    """index.html 안의 `const NAME = {...};` 를 JSON 으로 읽는다 (마커 사이)."""
+    m = re.search(r'const ' + name + r' = (\{.*?\});\n/\*__', html, re.S)
+    if not m:
+        return None
+    return json.loads(m.group(1))
+
+
+def test_new_subjects():
+    html = open(INDEX, encoding='utf-8').read()
+    js = re.search(r'<script>(.*)</script>', html, re.S).group(1)
+    check(re.search(r"id: 'hanja'", js) is not None and re.search(r"id: 'speak'", js) is not None,
+          'index.html: 새 과목 2개(한자 비문학·예쁘게 말하기) 추가')
+    check('SUBJECTS.length' in js and '/5 과목' not in js, 'index.html: 과목 수를 7과목 기준으로 표시')
+    check('const LEVEL_UP_STREAK = 5;' in js and 'const LEVEL_DOWN_STREAK = 3;' in js,
+          'index.html: 난이도 규칙(연속 정답 5 · 연속 오답 3)')
+    check('pushStampFor' not in js[js.index('function noteAnswer'):js.index('function noteAnswer') + 900],
+          'index.html: 난이도는 도장(서버)으로 보내지 않음')
+    m = re.search(r'function renderBoard\(\)\s*\{(.*?)\n\}', js, re.S)
+    mb = re.search(r'function boardText\(\)\s*\{(.*?)\n\}', js, re.S)
+    check(m and '단계' not in m.group(1) and mb and '단계' not in mb.group(1),
+          'index.html: 도장판(화면·복사글)에 난이도 표시 없음')
+    check('SUPABASE' in js or 'kids_study_stamps' in js, 'index.html: Supabase 도장 연동 유지')
+
+
+def test_hanja_sets():
+    html = open(INDEX, encoding='utf-8').read()
+    sets = parse_const(html, 'HANJA_SETS')
+    if not check(sets is not None, 'HANJA_SETS: index.html에 데이터 있음'):
+        return
+    check(sorted(sets.keys()) == ['1', '2', '3', '4'], 'HANJA_SETS: 1~4단계 (%s)' % sorted(sets.keys()))
+    total_chars = 0
+    for lv, arr in sets.items():
+        check(len(arr) >= 2, 'HANJA_SETS[%s]: 세트 %d개(>=2)' % (lv, len(arr)))
+        for st in arr:
+            tag = 'HANJA_SETS[%s/%s]' % (lv, st.get('id'))
+            check(len(st.get('chars') or []) == 3, tag + ': 오늘의 한자 3개')
+            check(len(st.get('quiz') or []) == 3, tag + ': 문제 3개')
+            essay = st.get('essay') or ''
+            paras = [p for p in essay.split('\n\n') if p.strip()]
+            check(3 <= len(paras) <= 4, tag + ': 글 문단 %d개' % len(paras))
+            check(180 <= len(essay) <= 430, tag + ': 글 %d자(180~430)' % len(essay))
+            card_text = norm(essay + ' ' + (st.get('key') or '') + ' ' + ' '.join(
+                '%s %s %s %s %s' % (c.get('hun', ''), c.get('eum', ''), c.get('bushu_name', ''), c.get('sentence', ''),
+                                    ' '.join('%s %s' % (w.get('w', ''), w.get('m', '')) for w in (c.get('words') or [])) + ' ' + ' '.join(c.get('steps') or []))
+                for c in st['chars']))
+            for c in st['chars']:
+                ctag = tag + '/' + str(c.get('c'))
+                total_chars += 1
+                check(bool(c.get('eum') and c.get('hun') and c.get('bushu') and c.get('bushu_name')),
+                      ctag + ': 음·훈·부수')
+                strokes = c.get('strokes') or []
+                check(1 <= len(strokes) <= 20 and all(len(s) >= 4 and len(s) % 2 == 0 for s in strokes),
+                      ctag + ': 획순 좌표 %d획' % len(strokes))
+                check(len(c.get('steps') or []) == len(strokes), ctag + ': 획마다 설명')
+                check(len(c.get('words') or []) >= 2 and all(w.get('w') and w.get('m') for w in c['words']),
+                      ctag + ': 예문 낱말 2개 이상')
+                check(bool(c.get('sentence')), ctag + ': 예문 문장')
+                check(c.get('c') in essay or any(w['w'] in essay for w in c.get('words', [])),
+                      ctag + ': 오늘 글이 이 한자를 다룸')
+            for z in st['quiz']:
+                opts = z.get('opts') or []
+                check(len(opts) == 3 and len(set(opts)) == 3 and 0 <= z.get('ans', -1) < 3, tag + ': 보기 3개·정답')
+                check(norm(opts[z['ans']]) in card_text, tag + ': 정답 "%s"를 글이나 한자 카드에서 찾을 수 있음' % opts[z['ans']])
+    check(total_chars >= 30, 'HANJA_SETS: 한자 %d개' % total_chars)
+
+
+def test_level_pools():
+    html = open(INDEX, encoding='utf-8').read()
+    pools = parse_const(html, 'LEVEL_POOLS')
+    if not check(pools is not None, 'LEVEL_POOLS: index.html에 데이터 있음'):
+        return
+    for subj in ('history', 'hero', 'news'):
+        for lv in ('2', '3', '4'):
+            items = (pools.get(subj) or {}).get(lv) or []
+            check(len(items) >= 2, 'LEVEL_POOLS[%s/%s]: 문제 %d개(>=2)' % (subj, lv, len(items)))
+            for it in items:
+                tag = 'LEVEL_POOLS[%s/%s/%s]' % (subj, lv, it.get('id'))
+                essay = it.get('essay') or ''
+                paras = [p for p in essay.split('\n\n') if p.strip()]
+                check(3 <= len(paras) <= 4, tag + ': 문단 %d개' % len(paras))
+                check(200 <= len(essay) <= 430, tag + ': 글 %d자' % len(essay))
+                opts = it.get('opts') or []
+                check(len(opts) == 3 and len(set(opts)) == 3 and 0 <= it.get('ans', -1) < 3, tag + ': 보기 3개·정답')
+                check(norm(opts[it['ans']]) in norm(essay), tag + ': 정답이 글 안에 있음')
+                check(bool(it.get('why')) and bool(it.get('key')) and bool(it.get('topic')), tag + ': 풀이·핵심·주제')
+    for lv in ('2', '3', '4'):
+        sents = (pools.get('english') or {}).get(lv) or []
+        check(len(sents) >= 10, 'LEVEL_POOLS[english/%s]: 문장 %d개(>=10)' % (lv, len(sents)))
+        check(len({s['en'] for s in sents}) == len(sents) and len({s['ko'] for s in sents}) == len(sents),
+              'LEVEL_POOLS[english/%s]: 문장·뜻 중복 없음' % lv)
+    for lv in ('1', '2', '3', '4'):
+        items = (pools.get('speak') or {}).get(lv) or []
+        check(len(items) >= 4, 'LEVEL_POOLS[speak/%s]: 상황 %d개(>=4)' % (lv, len(items)))
+        for it in items:
+            tag = 'LEVEL_POOLS[speak/%s/%s]' % (lv, it.get('id'))
+            opts = it.get('opts') or []
+            check(len(opts) == 3 and len(set(opts)) == 3 and it.get('ans') == 0, tag + ': 보기 3개·정답 0번')
+            check(all(it.get(k) for k in ('scene', 'title', 'situation', 'why', 'say', 'tip')), tag + ': 상황·해설·예쁜 말·팁')
+
+
+def test_math_levels():
+    html = open(INDEX, encoding='utf-8').read()
+    levels = parse_const(html, 'MATH_LEVELS')
+    if not check(levels is not None, 'MATH_LEVELS: index.html에 데이터 있음'):
+        return
+    for lv in ('2', '3', '4'):
+        bank = levels.get(lv) or []
+        kinds = {}
+        bad = []
+        for it in bank:
+            kinds[it['kind']] = kinds.get(it['kind'], 0) + 1
+            if not (len(it.get('opts') or []) == 3 and len(set(it['opts'])) == 3 and 0 <= it.get('ans', -1) < 3 and it.get('why')):
+                bad.append(it.get('q'))
+        check(len(bank) >= 60, 'MATH_LEVELS[%s]: 문제 %d개(>=60)' % (lv, len(bank)))
+        check(not bad, 'MATH_LEVELS[%s]: 보기 3개·정답·풀이 (%s)' % (lv, '실패 %d건: %s' % (len(bad), bad[:2]) if bad else '전건 통과'))
+        check(kinds.get('연산', 0) >= 20 and kinds.get('사고력', 0) >= 8 and kinds.get('서술형', 0) >= 8,
+              'MATH_LEVELS[%s]: 종류별 %s' % (lv, kinds))
+
+
+def test_level_runtime():
+    """quickjs 가 있으면 앱 스크립트를 실제로 돌려 난이도·새 과목 화면을 확인한다."""
+    import subprocess
+    try:
+        import quickjs  # noqa: F401
+    except Exception:
+        print('(quickjs 없음 → 실행 점검은 건너뜀)')
+        return
+    r = subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'probe_app.py')],
+                       capture_output=True, text=True, cwd=ROOT)
+    ok = r.returncode == 0 and '전부 통과' in r.stdout
+    if not ok:
+        print(r.stdout[-1500:])
+        print(r.stderr[-1500:])
+    check(ok, '실행 점검: 화면·난이도·새 과목 동작 (tools/probe_app.py)')
+
+
 def main():
     data = json.load(open(VIDEOS, encoding='utf-8'))
     js = re.search(r'<script>(.*)</script>', open(INDEX, encoding='utf-8').read(), re.S).group(1)
@@ -448,8 +585,13 @@ def main():
     totals = test_videos(data)
     test_english(cfg)
     test_rotation(data, cfg)
+    test_new_subjects()
+    test_hanja_sets()
+    test_level_pools()
+    test_math_levels()
     html = test_index()
     test_downloads_copy(html)
+    test_level_runtime()
     print('\n'.join('✅ ' + m for m in PASS))
     if FAIL:
         print('\n' + '\n'.join('❌ ' + m for m in FAIL))

@@ -31,6 +31,17 @@ def clean(v):
     }
 
 
+def run_tool(name):
+    """tools/ 아래 생성기(gen_levels·gen_hanja·gen_math_levels)를 불러 실행한다.
+       각 파일은 끝에서 main() 을 부르므로, 본문만 잘라 실행한 뒤 main() 을 직접 부른다."""
+    path = os.path.join(ROOT, 'tools', name)
+    src = open(path, encoding='utf-8').read()
+    src = re.sub(r'\nmain\(\)\s*$', '\n', src)
+    ns = {'__name__': 'build_' + name.replace('.py', ''), '__file__': path}
+    exec(compile(src, path, 'exec'), ns)
+    ns['main']()
+
+
 def main():
     data = json.load(open(VIDEOS, encoding='utf-8'))
     banks = {}
@@ -52,6 +63,9 @@ def main():
         print('(이미 최신)')
     open(HTML, 'w', encoding='utf-8', newline='').write(new)
     print('subject pools:', {k: len(v) for k, v in banks.items()}, 'total', sum(len(v) for v in banks.values()))
+    # 2~4단계 데이터(읽기 글·영어 문장·예쁘게 말하기 / 한자 비문학 / 수학)
+    for tool in ('gen_levels.py', 'gen_hanja.py', 'gen_math_levels.py'):
+        run_tool(tool)
 
 
 main()
