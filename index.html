@@ -319,6 +319,7 @@
   .k-badge.b4{background:#E2F8F1;color:#0E7D5C}
   .k-badge.b5{background:#EDEAFF;color:#4B3BA8}
   .k-badge.b6{background:#FFEAF0;color:#B3235C}
+  .sec-head .more{max-width:56%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
   /* ── 난이도(단계) 배지 ── */
   .lv-wrap{margin:2px 0 12px}
@@ -1976,7 +1977,7 @@ function hanjaDayHTML(sub) {
   }
   const set = first.hjSet;
   let h = '<div class="hj-head"><span class="hj-tag">📖 오늘의 비문학</span><b>' + esc(set.title) + '</b></div>';
-  h += '<div class="sec-head"><h3>漢 오늘의 한자 ' + set.chars.length + '개</h3><span class="more">' + esc(set.topic) + '</span></div>';
+  h += '<div class="sec-head"><h3>漢 오늘의 한자 ' + set.chars.length + '개</h3><span class="more">하루 ' + set.chars.length + '개 · ' + (set.chars.reduce(function (n, c) { return n + (c.strokes || []).length; }, 0)) + '획</span></div>';
   set.chars.forEach(function (c, i) { h += hanjaCardHTML(c, i); });
   h += readingHTML(sub, first);
   h += '<div class="sec-head"><h3>🎯 오늘의 문제 ' + items.length + '개</h3><span class="more">' + prog.solved + '/' + prog.total + ' 맞힘</span></div>';
@@ -2025,7 +2026,7 @@ function hanjaCardHTML(c, i) {
     '<div class="hj-top">' +
       '<div class="hj-pic">' + hanjaSVG(c) + '</div>' +
       '<div class="hj-info">' +
-        '<div class="hj-hu">' + esc(c.hun) + '<span>' + esc(c.eum) + '</span></div>' +
+        '<div class="hj-hu">' + esc(c.hun) + ' <span>' + esc(c.eum) + '</span></div>' +
         '<div class="hj-meta">부수 ' + esc(c.bushu) + '(' + esc(c.bushu_name) + ') · ' + (c.strokes || []).length + '획</div>' +
         '<div class="hj-say"><button data-action="say-hanja" data-hj="' + i + '">🔊 읽어주기</button></div>' +
       '</div>' +
