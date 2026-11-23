@@ -1892,7 +1892,7 @@ function renderSubject() {
     '<button class="back-btn" data-action="back" aria-label="뒤로">←</button>' +
     '<div class="detail-head" style="--soft:' + sub.soft + '">' +
       '<span class="d-ico">' + sub.emoji + '</span>' +
-      '<div><h2>' + sub.name + '</h2><p>' + esc(sub.line) + '</p></div>' +
+      '<div><h2>' + sub.name + '</h2><p>' + esc(sub.line) + (levelOf(state.activeId, sub.id) > 1 ? ' · 지금 ' + levelOf(state.activeId, sub.id) + '단계(' + LEVEL_GRADE[levelOf(state.activeId, sub.id)] + ') 문제' : '') + '</p></div>' +
     '</div>' +
     '<div class="lv-wrap">' + levelChipHTML(sub) + '</div>' +
     '<div class="seg2">' +
