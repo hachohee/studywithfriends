@@ -130,8 +130,8 @@ def test_math():
     check(not bad_josa, 'gen_math: 숫자 뒤 조사(을/를·이/가) (%s)' % ('실패 %d건: %s' % (len(bad_josa), bad_josa[:3]) if bad_josa else '전건 통과'))
     check(kinds.get('연산', 0) >= 100 and kinds.get('사고력', 0) >= 30 and kinds.get('서술형', 0) >= 30,
           'gen_math: 종류별 구성 %s' % kinds)
-    check(kinds.get('연산', 0) == 140 and kinds.get('사고력', 0) == 45 and kinds.get('서술형', 0) == 45,
-          'gen_math: 은행 크기 유지(연산 140 · 사고력 45 · 서술형 45)')
+    check(kinds.get('연산', 0) >= 140 and kinds.get('사고력', 0) >= 45 and kinds.get('서술형', 0) >= 45,
+          'gen_math: 은행 크기 유지(연산 140 · 사고력 45 · 서술형 45 이상, 지금 %s)' % kinds)
     test_math_time(bank)
     test_math_level(bank)
 
@@ -287,6 +287,17 @@ def test_english(cfg):
     check(per == 3 and len(ens) % per == 0, 'ENGLISH: 하루 %d문장 × %d일 = %d문장' % (per, len(ens) // per, len(ens)))
 
 
+def math_kind_counts():
+    """index.html 의 MATH_BANK 에서 종류별 문제 수를 센다(매일 뒤에 덧붙어도 검사가 따라간다)."""
+    html = open(INDEX, encoding='utf-8').read()
+    m = re.search(r'const MATH_BANK = (\[.*?\]);\n/\*__', html, re.S)
+    bank = json.loads(m.group(1))
+    out = {}
+    for it in bank:
+        out[it['kind']] = out.get(it['kind'], 0) + 1
+    return out
+
+
 def test_rotation(data, cfg):
     hist = data['subjects']['history']
     hero = data['subjects']['hero']
@@ -352,7 +363,7 @@ def test_rotation(data, cfg):
     plan = [('연산', 5), ('사고력', 2), ('서술형', 3)]
     total = sum(n for _, n in plan)
     check(total == cfg['math_total'] == 10, 'MATH_PLAN: 하루 %d문제' % total)
-    bank_len = {'연산': 140, '사고력': 45, '서술형': 45}
+    bank_len = math_kind_counts()
     for day in range(0, 28):
         for kind, n in plan:
             ids = list(range(bank_len[kind]))

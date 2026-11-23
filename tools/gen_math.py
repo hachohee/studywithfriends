@@ -317,6 +317,12 @@ QUOTA_CALC = {0: 18, 1: 20, 2: 18, 3: 16, 4: 20, 5: 20, 6: 14, 7: 14}   # 합 14
 QUOTA_THINK = {0: 9, 1: 9, 2: 9, 3: 9, 4: 9}                            # 합 45
 QUOTA_WORD = {t: 5 for t in range(9)}                                    # 합 45
 
+# 뒤에 덧붙이는 몫(하루치 10문제 = 연산 5 · 사고력 2 · 서술형 3).
+# 기존 문제 번호가 바뀌지 않도록 새 시드로 따로 만들어 '맨 뒤'에 붙인다.
+EXTRA_CALC = {0: 1, 2: 1, 4: 1, 5: 1, 6: 1}
+EXTRA_THINK = {0: 1, 2: 1}
+EXTRA_WORD = {0: 1, 4: 1, 8: 1}
+
 
 def fill(rng, fn, quota, seen):
     """종류별로 quota 개씩, 서로 다른 문제를 만들어 둔다."""
@@ -353,9 +359,15 @@ def build():
     calc_b = fill(rng, calc, QUOTA_CALC, seen)
     think_b = fill(rng, think, QUOTA_THINK, seen)
     word_b = fill(rng, word, QUOTA_WORD, seen)
-    return (interleave(calc_b, sorted(calc_b)) +
+    base = (interleave(calc_b, sorted(calc_b)) +
             interleave(think_b, sorted(think_b)) +
             interleave(word_b, sorted(word_b)))
+    # 매일 덧붙이는 몫 — 앞 번호(기존 230문제)는 그대로 두고 뒤에만 붙는다
+    rng2 = random.Random(20261124)
+    extra = (interleave(fill(rng2, calc, EXTRA_CALC, seen), sorted(EXTRA_CALC)) +
+             interleave(fill(rng2, think, EXTRA_THINK, seen), sorted(EXTRA_THINK)) +
+             interleave(fill(rng2, word, EXTRA_WORD, seen), sorted(EXTRA_WORD)))
+    return base + extra
 
 
 def main():
