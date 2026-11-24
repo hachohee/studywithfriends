@@ -376,8 +376,11 @@ def test_rotation(data, cfg):
     check(per_en == 3, 'DAILY_SENTENCES = %d (영어 하루 3문장)' % per_en)
     check(n_sent >= 30, 'ENGLISH_STEPS: 문장 %d개(>=30)' % n_sent)
     used = []
+    step = 7
+    while any(step % k == 0 and n_sent % k == 0 for k in range(2, min(step, n_sent) + 1)):
+        step += 1
     for d in range(0, n_sent // per_en):
-        idxs = [((d * per_en + j) * 7 + 3) % n_sent for j in range(per_en)]
+        idxs = [((d * per_en + j) * step + 3) % n_sent for j in range(per_en)]
         if not check(len(set(idxs)) == per_en, 'dailySentIdxs: %d일차 영어 문장 3개(중복 없음)' % d):
             break
         used += idxs
