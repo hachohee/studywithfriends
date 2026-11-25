@@ -113,6 +113,47 @@ JS = r"""
   for (var j = 0; j < ids.length; j++) awardQuiz('hanja', ids[j]);
   out.hanjaComplete = subProgress(hsub).complete;
 
+  // 수학: 화면에 보여 주는 문제 목록과 완료 판정 목록이 같은가 · 단계가 달라도 다 풀면 완료되는가
+  out.mathByLevel = [1, 2, 3, 4].map(function (lv) {
+    state.progress = {}; state.mathDay = {}; state.levelNext = {}; state.streaks = {};
+    window.__kids.setLevel('math', lv);
+    var sets = mathDaySets(undefined, 'p1');
+    var shown = sets.reduce(function (a, g) { return a.concat(g.list); }, []);
+    var prog = mathIdxs(undefined, lv, 'p1');
+    var same = JSON.stringify(shown) === JSON.stringify(prog);
+    shown.forEach(function (qi) { awardQuiz('math', qi); });
+    var p = subProgress(SUBJECT_BY_ID['math'], 'p1');
+    var badge = (dailyCardHTML(SUBJECT_BY_ID['math']).match(/d-badge">([^<]*)/) || [])[1];
+    return { lv: lv, n: shown.length, same: same, solved: p.solved, complete: p.complete, badge: badge };
+  });
+
+  // 은행 맨 뒤에 문제가 덧붙어도(매일 10문제) 하루 중간에 오늘 목록이 바뀌지 않는가
+  state.progress = {}; state.mathDay = {};
+  window.__kids.setLevel('math', 2);
+  var idxBefore = JSON.stringify(mathIdxs(undefined, 2, 'p1'));
+  var mbank = MATH_LEVELS[2], mlen = mbank.length;
+  for (var z = 0; z < 10; z++) mbank.push({ kind: '연산', q: '덧붙인 문제 ' + z, opts: ['1', '2', '3'], ans: 0, why: 'x' });
+  var idxAfter = JSON.stringify(mathIdxs(undefined, 2, 'p1'));
+  mbank.length = mlen;
+  out.mathGrowSame = idxBefore === idxAfter;
+
+  // 한자: 오늘 문제 3개가 언제나 '한 세트' 안에서만 나오는가 (단계 × 날짜)
+  out.hanjaOneSet = (function () {
+    var bad = [];
+    for (var lv = 1; lv <= 4; lv++) {
+      window.__kids.setLevel('hanja', lv);
+      for (var off = 0; off < 10; off++) {
+        var d = new Date(refNow().getTime() + off * 86400000);
+        var idx = dailyIdxs(SUBJECT_BY_ID['hanja'], d, 'p1');
+        var ids = idx.map(function (i) { var it = poolItem(SUBJECT_BY_ID['hanja'], i, 'p1'); return it && it.hjSet ? it.hjSet.id : 'NULL'; });
+        var uniq = ids.filter(function (v, i) { return ids.indexOf(v) === i; });
+        if (idx.length !== 3 || uniq.length !== 1 || uniq[0] === 'NULL') bad.push(lv + '단계/' + off + '일:' + uniq.join(','));
+      }
+    }
+    window.__kids.setLevel('hanja', 1);
+    return bad;
+  })();
+
   out.pageErrs = window.__errs || [];
   return JSON.stringify(out);
 })()
@@ -153,6 +194,13 @@ def main():
     check(not res['boardHasLevelWord'] and not res['boardHasLevel'], '도장판에 난이도·단계 표시 없음')
     check(res['speakComplete']['before'] is False and res['speakComplete']['after'] is True, '예쁘게 말하기: 1문제 맞히면 오늘 완료')
     check(res['hanjaSetCount'] == 3 and res['hanjaComplete'] is True, '한자: 3문제 맞히면 오늘 완료')
+    ml = res['mathByLevel']
+    check(all(x['n'] == 10 for x in ml), '수학: 단계별 오늘 문제 10개 ' + str([x['n'] for x in ml]))
+    check(all(x['same'] for x in ml), '수학: 화면 문제 목록 = 완료 판정 목록(1~4단계)')
+    check(all(x['complete'] and x['solved'] == 10 for x in ml), '수학: 단계가 달라도 10문제를 다 맞히면 오늘 완료 ' + str([(x['lv'], x['solved'], x['complete']) for x in ml]))
+    check(all(('완료' in (x['badge'] or '')) for x in ml), '수학: 다 풀면 홈 카드가 완료 표시 ' + str([x['badge'] for x in ml]))
+    check(res['mathGrowSame'], '수학: 은행에 문제가 덧붙어도 오늘 문제 목록은 그대로')
+    check(not res['hanjaOneSet'], '한자: 오늘 문제 3개가 한 세트 안에서만 나옴 ' + str(res['hanjaOneSet'])[:200])
     check(not res['pageErrs'], '페이지 오류 없음 ' + str(res['pageErrs'])[:300])
     if not ok:
         sys.exit(1)
