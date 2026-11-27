@@ -338,6 +338,11 @@ EXTRA4_CALC = {4: 1, 5: 1, 6: 1, 0: 1, 1: 1}
 EXTRA4_THINK = {0: 1, 3: 1}
 EXTRA4_WORD = {5: 1, 6: 1, 0: 1}
 
+# 2026-11-28(토) 하루치 — 앞의 270문제는 그대로 두고 맨 뒤에 10문제를 더 붙인다.
+EXTRA5_CALC = {2: 1, 7: 1, 3: 1, 5: 1, 0: 1}
+EXTRA5_THINK = {4: 1, 1: 1}
+EXTRA5_WORD = {7: 1, 2: 1, 4: 1}
+
 
 def fill(rng, fn, quota, seen):
     """종류별로 quota 개씩, 서로 다른 문제를 만들어 둔다."""
@@ -397,7 +402,12 @@ def build():
     extra4 = (interleave(fill(rng5, calc, EXTRA4_CALC, seen), sorted(EXTRA4_CALC)) +
               interleave(fill(rng5, think, EXTRA4_THINK, seen), sorted(EXTRA4_THINK)) +
               interleave(fill(rng5, word, EXTRA4_WORD, seen), sorted(EXTRA4_WORD)))
-    return base + extra + extra2 + extra3 + extra4
+    # 2026-11-28 몫 — 역시 앞 문제 번호는 그대로, 맨 뒤에만 붙는다
+    rng6 = random.Random(20261128)
+    extra5 = (interleave(fill(rng6, calc, EXTRA5_CALC, seen), sorted(EXTRA5_CALC)) +
+              interleave(fill(rng6, think, EXTRA5_THINK, seen), sorted(EXTRA5_THINK)) +
+              interleave(fill(rng6, word, EXTRA5_WORD, seen), sorted(EXTRA5_WORD)))
+    return base + extra + extra2 + extra3 + extra4 + extra5
 
 
 def main():
