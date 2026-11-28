@@ -4,7 +4,6 @@
   "description": "초1 친구 5명이 함께 쓰는 공동 학습 웹앱 — 수학·영어·한국사·위인·시사상식",
   "lang": "ko",
   "dir": "ltr",
-  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

@@ -2714,6 +2714,53 @@ function appBaseUrl() {
 }
 function inviteUrl(slot) { return appBaseUrl() + '?join=1&slot=' + (slot + 1) + '&room=' + encodeURIComponent(roomId); }
 
+/* ── 받은 초대 기억하기 ──
+   아이패드·아이폰 '홈 화면에 추가'는 주소의 ?join=… 를 떼고 열리는 일이 있다.
+   그래서 초대 링크로 들어온 자리(번호·방)를 이 폰에 남겨 두고,
+   파라미터 없이 열려도 그 자리로 이어서 참여할 수 있게 한다. */
+const INVITE_STORE = 'kidsStudyApp.invite.v1';
+
+function inviteFromSearch() {
+  try {
+    const s = String(location.search || '');
+    const m = /[?&]slot=(\d+)/.exec(s);
+    if (!m) return null;
+    const r = /[?&]room=([^&#]*)/.exec(s);
+    let room = '';
+    if (r) { try { room = decodeURIComponent(r[1]); } catch (e) { room = ''; } }
+    return { slot: Math.min(5, Math.max(1, Number(m[1]) || 1)), room: room, at: Date.now() };
+  } catch (e) { return null; }
+}
+
+function rememberInvite(inv) {
+  if (!inv || !inv.slot) return;
+  try { localStorage.setItem(INVITE_STORE, JSON.stringify({ slot: inv.slot, room: inv.room || '', at: Date.now() })); } catch (e) {}
+}
+
+function savedInvite() {
+  try {
+    const raw = localStorage.getItem(INVITE_STORE);
+    if (!raw) return null;
+    const o = JSON.parse(raw);
+    const n = Number(o && o.slot);
+    if (!n || n < 1 || n > 5) return null;
+    return { slot: Math.min(5, Math.max(1, n)), room: String((o && o.room) || ''), at: Number((o && o.at) || 0) };
+  } catch (e) { return null; }
+}
+
+function inviteQuery(inv) {
+  return '?join=1&slot=' + inv.slot + (inv.room ? '&room=' + encodeURIComponent(inv.room) : '');
+}
+
+/* 주소에서 초대 정보만 남긴다 (?d= 같은 실험용 파라미터는 떼어 홈 화면 아이콘에 남지 않게) */
+function tidyInviteUrl(inv) {
+  try {
+    if (!inv) return;
+    const next = location.pathname + inviteQuery(inv);
+    if (location.pathname + location.search !== next) history.replaceState(null, '', next);
+  } catch (e) {}
+}
+
 function inviteMessage(slot) {
   const p = state.profiles[slot];
   return '안녕! 우리 애들 공부방 초대 링크야 📚\n' +
@@ -2789,26 +2836,34 @@ function showModal(html) {
 }
 
 /* ── 참여 화면 ── */
-function joinSlotFromUrl() {
+function joinSlotFromUrl(prefSlot) {
   const m = /[?&]slot=(\d+)/.exec(location.search);
-  const n = m ? Number(m[1]) : (nextEmptySlot() + 1);
+  const n = m ? Number(m[1]) : (Number(prefSlot) || (nextEmptySlot() + 1));
   return Math.min(5, Math.max(1, n || 1)) - 1;
 }
 
 let joinNeedLink = false;
 function startJoin(needLink) {
-  joinNeedLink = !!needLink || !/[?&]slot=\d/.test(location.search);   // 초대 링크(자리 번호)가 없으면 안내만
+  const fromUrl = inviteFromSearch();
+  if (fromUrl) rememberInvite(fromUrl);
+  const known = fromUrl || savedInvite();                 // 초대 링크로 받은 자리(또는 이 폰에 남은 자리)
+  joinNeedLink = !!needLink || !known;                    // 초대 정보가 하나도 없을 때만 안내 화면
   welcomeName = '';
-  joinSlot = joinSlotFromUrl();
+  joinSlot = joinSlotFromUrl(known ? known.slot : 0);
   joinPick = '';
   showView('join');
 }
 
 function renderJoin() {
   if (joinNeedLink) {
+    const known = savedInvite();
     $('#view-join').innerHTML = '<div class="join-wrap"><div class="join-hero">🔗</div>' +
       '<h1>초대 링크로 들어와 줘!</h1>' +
-      '<p class="join-sub">엄마·아빠가 보내 준 <b>초대 링크</b>를 눌러서 들어와야 내 자리가 생겨요.<br>내 자리에서는 내 문제만 풀 수 있고, 친구들은 공부했는지만 볼 수 있어요.</p></div>';
+      '<p class="join-sub">엄마·아빠가 보내 준 <b>초대 링크</b>를 눌러서 들어와야 내 자리가 생겨요.<br>내 자리에서는 내 문제만 풀 수 있고, 친구들은 공부했는지만 볼 수 있어요.</p>' +
+      (known ? '<button class="btn-primary" data-action="join-resume">' + known.slot + '번 자리로 이어서 들어가기 →</button>' : '') +
+      '<button class="btn-ghost" data-action="join-later">먼저 둘러보기</button>' +
+      '<p class="note">홈 화면 아이콘은 <b>초대 링크를 연 화면</b>에서 <b>공유 → 홈 화면에 추가</b>로 만들면 내 자리가 저절로 기억돼요.</p>' +
+      '</div>';
     return;
   }
   const p = state.profiles[joinSlot] || state.profiles[0];
@@ -2873,7 +2928,9 @@ function joinSubmit() {
   state.joined = true;   // 이 폰은 이제 이 자리 전용
   persist();
   pushProfile(joinSlot);
-  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  // 주소의 초대 정보(?join=1&slot=N&room=…)는 지우지 않고 남긴다 — 이 화면에서 '홈 화면에 추가'를 해도 같은 자리로 열리도록
+  rememberInvite({ slot: joinSlot + 1, room: roomId });
+  try { history.replaceState(null, '', location.pathname + inviteQuery({ slot: joinSlot + 1, room: roomId })); } catch (e) {}
   welcomeName = name;
   showView('home');
   toast(name + '야, 반가워! 🎉');
@@ -3367,6 +3424,16 @@ document.addEventListener('click', (e) => {
       joinSubmit();
       break;
 
+    case 'join-resume': {
+      const inv = savedInvite();
+      if (!inv) { startJoin(true); break; }
+      joinNeedLink = false;
+      joinSlot = Math.min(5, Math.max(1, inv.slot)) - 1;
+      joinPick = '';
+      renderJoin();
+      break;
+    }
+
     case 'join-later':
       try { history.replaceState(null, '', location.pathname); } catch (e) {}
       showView('home');
@@ -3621,6 +3688,10 @@ async function init() {
   if (m) DAY_OVERRIDE = m[1];
   roomId = readRoom();
 
+  // 초대 링크로 들어왔으면 자리(번호·방)를 이 폰에 기억시키고, 주소에는 초대 정보만 남긴다
+  const invite0 = inviteFromSearch();
+  if (invite0) { rememberInvite(invite0); tidyInviteUrl(invite0); }
+
   const loaded = await SyncAdapter.load();
   mergeLoaded(loaded);
 
@@ -3654,7 +3725,7 @@ async function init() {
     const me = activeProfile(), def = DEFAULT_PROFILES.find(d => d.id === me.id);
     if (totalStamps(me.id) > 0 || (def && me.name !== def.name)) state.joined = true;
   }
-  if (state.joined) { try { history.replaceState(null, '', location.pathname); } catch (e) {} showView('home'); }   // 이미 내 자리가 있으면 다른 초대 링크는 무시
+  if (state.joined) { try { history.replaceState(null, '', location.pathname); } catch (e) {} showView('home'); }   // 이미 내 자리가 있으면 다른 초대 링크는 무시(주소만 정리, 기억해 둔 초대는 그대로)
   else startJoin();
 
   // 친구들 폰과 실시간 공유 시작 (4초 폴링 + 화면 복귀·온라인 시 즉시)

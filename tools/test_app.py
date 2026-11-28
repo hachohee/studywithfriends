@@ -594,6 +594,23 @@ def test_level_runtime():
     check(ok, '실행 점검: 화면·난이도·새 과목 동작 (tools/probe_app.py)')
 
 
+def test_invite_flow():
+    """초대 링크(?join=… )가 '홈 화면에 추가' 뒤에도 살아남는지 (tools/verify_invite.py)."""
+    import subprocess
+    try:
+        import quickjs  # noqa: F401
+    except Exception:
+        print('(quickjs 없음 → 초대 링크 점검은 건너뜀)')
+        return
+    r = subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'verify_invite.py')],
+                       capture_output=True, text=True, cwd=ROOT)
+    ok = r.returncode == 0 and '전부 통과' in r.stdout
+    if not ok:
+        print(r.stdout[-1500:])
+        print(r.stderr[-1500:])
+    check(ok, '초대 링크: 주소 유지·홈 화면 아이패드 대응 (tools/verify_invite.py)')
+
+
 def main():
     data = json.load(open(VIDEOS, encoding='utf-8'))
     js = re.search(r'<script>(.*)</script>', open(INDEX, encoding='utf-8').read(), re.S).group(1)
@@ -609,6 +626,7 @@ def main():
     html = test_index()
     test_downloads_copy(html)
     test_level_runtime()
+    test_invite_flow()
     print('\n'.join('✅ ' + m for m in PASS))
     if FAIL:
         print('\n' + '\n'.join('❌ ' + m for m in FAIL))
