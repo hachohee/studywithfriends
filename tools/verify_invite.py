@@ -130,6 +130,10 @@ def main():
           'index.html: 주소 전체 삭제는 2곳(이미 내 자리 있음·먼저 둘러보기)만')
     check('INVITE_STORE' in html and 'kidsStudyApp.invite.v1' in html, 'index.html: 초대 기억(localStorage) 구현')
 
+    # 7) 이미 내 자리가 있는 폰은 다른 초대 링크를 기억하지 않는다 (init 에서 바로 기억하지 않음)
+    init_body = re.search(r'async function init\(\)\s*\{(.*?)\n\}', html, re.S).group(1)
+    check('rememberInvite(' not in init_body, 'index.html: 참여 화면에 들어갈 때만 초대를 기억(joined 폰은 무시)')
+
     print('\n전부 통과' if not FAIL else '\n실패 %d건' % len(FAIL))
     return 0 if not FAIL else 1
 

@@ -3688,9 +3688,10 @@ async function init() {
   if (m) DAY_OVERRIDE = m[1];
   roomId = readRoom();
 
-  // 초대 링크로 들어왔으면 자리(번호·방)를 이 폰에 기억시키고, 주소에는 초대 정보만 남긴다
+  // 초대 링크로 들어왔으면 주소에는 초대 정보만 남긴다(?d= 같은 군더더기 제거 — 홈 화면 아이콘에 남지 않게).
+  // 자리를 기억하는 건 실제로 참여 화면에 들어갈 때(startJoin)만 한다 — 이미 내 자리가 있는 폰은 다른 초대를 무시한다.
   const invite0 = inviteFromSearch();
-  if (invite0) { rememberInvite(invite0); tidyInviteUrl(invite0); }
+  if (invite0) tidyInviteUrl(invite0);
 
   const loaded = await SyncAdapter.load();
   mergeLoaded(loaded);
